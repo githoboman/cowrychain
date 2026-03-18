@@ -18,6 +18,8 @@ export function Navbar() {
     { label: "Dashboard", href: "/" },
     { label: "Vaults", href: "/vaults" },
     { label: "Save", href: "/save" },
+    { label: "Squads", href: "/squads" },
+    { label: "Credit", href: "/credit" },
     { label: "Portfolio", href: "/portfolio" },
   ];
 

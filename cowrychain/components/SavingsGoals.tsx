@@ -8,6 +8,7 @@ import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { useUserPositions } from "@yo-protocol/react";
 import { formatAmount } from "@/lib/utils";
+import { AutomateDepositModal } from "./modals/AutomateDepositModal";
 
 export function SavingsGoals() {
   const { address, isConnected } = useAccount();
@@ -21,10 +22,11 @@ export function SavingsGoals() {
   const totalAssetsNum = parseFloat(formatUnits(totalAssets, 6));
 
   const [goals, setGoals] = useState([
-    { id: 1, name: "New Laptop", target: 2000, color: "#10b981" },
-    { id: 2, name: "Summer Trip", target: 5000, color: "#3b82f6" },
+    { id: 1, name: "New Laptop", target: 2000, color: "#10b981", automated: false },
+    { id: 2, name: "Summer Trip", target: 5000, color: "#3b82f6", automated: true },
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [automateGoal, setAutomateGoal] = useState<{ id: number; name: string } | null>(null);
   const [newGoal, setNewGoal] = useState({ name: "", target: "" });
 
   const handleAddGoal = (e: React.FormEvent) => {
@@ -39,7 +41,8 @@ export function SavingsGoals() {
       id,
       name: newGoal.name,
       target: parseFloat(newGoal.target),
-      color: randomColor
+      color: randomColor,
+      automated: false
     }]);
 
     setNewGoal({ name: "", target: "" });
@@ -101,9 +104,22 @@ export function SavingsGoals() {
                   />
                 </div>
                 
-                <div className="flex justify-between mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
+                <div className="flex justify-between mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tighter items-center">
                   <span>{progress.toFixed(0)}% reached</span>
-                  <span className="group-hover:text-foreground transition-colors text-primary italic">Yield Compounding</span>
+                  
+                  <div className="flex items-center gap-2">
+                    {goal.automated && (
+                      <span className="text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/20 flex items-center gap-1 normal-case tracking-normal">
+                        ⚡ Auto-depositing
+                      </span>
+                    )}
+                    <button 
+                      onClick={() => setAutomateGoal({ id: goal.id, name: goal.name })}
+                      className="group-hover:text-foreground transition-colors text-primary italic underline-offset-2 hover:underline"
+                    >
+                      {goal.automated ? "Edit Auto-Invest" : "Automate"}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             );
@@ -173,6 +189,19 @@ export function SavingsGoals() {
               </form>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {automateGoal && (
+          <AutomateDepositModal 
+            goalName={automateGoal.name} 
+            onClose={() => {
+              // mark it as automated in state for visual feedback
+              setGoals(goals.map(g => g.id === automateGoal.id ? { ...g, automated: true } : g));
+              setAutomateGoal(null);
+            }} 
+          />
         )}
       </AnimatePresence>
     </div>
