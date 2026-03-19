@@ -2,6 +2,7 @@
 
 import { X, ArrowRight, Loader2, Info } from "lucide-react";
 import { useState } from "react";
+import { useCreditStore } from "@/lib/credit-store";
 
 interface BorrowModalProps {
   maxCredit: number;
@@ -13,6 +14,7 @@ export function BorrowModal({ maxCredit, currentDebt, onClose }: BorrowModalProp
   const [amount, setAmount] = useState("");
   const [step, setStep] = useState<"idle" | "borrowing" | "success">("idle");
 
+  const { borrow } = useCreditStore();
   const numAmount = Number(amount);
   const isOverLimit = numAmount > maxCredit;
   const isValid = numAmount > 0 && !isOverLimit;
@@ -21,8 +23,9 @@ export function BorrowModal({ maxCredit, currentDebt, onClose }: BorrowModalProp
     if (!isValid) return;
     setStep("borrowing");
     
-    // Simulate transaction
+    // Simulate transaction delay
     await new Promise(res => setTimeout(res, 2500));
+    borrow(numAmount);
     setStep("success");
   };
 

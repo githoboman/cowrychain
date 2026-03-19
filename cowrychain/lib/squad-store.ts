@@ -1,6 +1,5 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Squad {
   id: string;
@@ -36,54 +35,33 @@ const DEFAULT_SQUADS: Squad[] = [
   }
 ];
 
-export function useSquadStore() {
-  const [squads, setSquads] = useState<Squad[]>([]);
-  
-  // Load from local storage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("cowrychain_squads");
-      if (stored) {
-        setSquads(JSON.parse(stored));
-      } else {
-        setSquads(DEFAULT_SQUADS);
-      }
-    } catch {
-      setSquads(DEFAULT_SQUADS);
-    }
-  }, []);
-
-  const saveSquads = (newSquads: Squad[]) => {
-    setSquads(newSquads);
-    localStorage.setItem("cowrychain_squads", JSON.stringify(newSquads));
-  };
-
-  const createSquad = (squad: Omit<Squad, "id" | "current" | "members">) => {
-    const newSquads = [
-      ...squads,
-      {
-        ...squad,
-        id: `sq-${Date.now()}`,
-        current: 0,
-        members: 1, // You are the first member
-      }
-    ];
-    saveSquads(newSquads);
-  };
-
-  const depositToSquad = (id: string, amount: number) => {
-    const newSquads = squads.map(sq => {
-      if (sq.id === id) {
-        return { ...sq, current: sq.current + amount, members: Math.max(sq.members, 2) }; // Simulate another member
-      }
-      return sq;
-    });
-    saveSquads(newSquads);
-  };
-
-  return {
-    squads,
-    createSquad,
-    depositToSquad
-  };
+interface SquadStore {
+  squads: Squad[];
+  createSquad: (squad: Omit<Squad, "id" | "current" | "members">) => void;
+  depositToSquad: (id: string, amount: number) => void;
 }
+
+export const useSquadStore = create<SquadStore>()(
+  persist(
+    (set) => ({
+      squads: DEFAULT_SQUADS,
+      createSquad: (squad) => set((state) => ({
+        squads: [
+          ...state.squads,
+          {
+            ...squad,
+            id: `sq-${Date.now()}`,
+            current: 0,
+            members: 1,
+          }
+        ]
+      })),
+      depositToSquad: (id, amount) => set((state) => ({
+        squads: state.squads.map(sq => sq.id === id ? { ...sq, current: sq.current + amount, members: Math.max(sq.members, 2) } : sq)
+      }))
+    }),
+    {
+      name: 'cowrychain_squads',
+    }
+  )
+);

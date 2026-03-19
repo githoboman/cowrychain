@@ -7,12 +7,14 @@ import { ThemeToggle } from "./ThemeToggle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 export function Navbar() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { label: "Dashboard", href: "/" },
@@ -42,8 +44,8 @@ export function Navbar() {
         </div>
       </Link>
 
-      {/* Nav links - Only show when connected or on desktop */}
-      <div className="hidden md:flex items-center gap-1 bg-secondary/50 p-1 rounded-2xl border border-border/50">
+      {/* Desktop Nav links */}
+      <div className="hidden lg:flex items-center gap-1 bg-secondary/50 p-1 rounded-2xl border border-border/50 absolute left-1/2 -translate-x-1/2">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           return (
@@ -91,7 +93,39 @@ export function Navbar() {
             <LogOut size={18} />
           </button>
         )}
+
+        {/* Mobile Menu Toggle */}
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-secondary text-foreground border border-border/50 hover:bg-secondary/80 transition-colors"
+        >
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="absolute top-[73px] left-0 right-0 bg-card border-b border-border shadow-2xl p-4 flex flex-col gap-2 lg:hidden animate-in slide-in-from-top-2">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={clsx(
+                  "px-4 py-3 rounded-xl text-md font-bold transition-all duration-200",
+                  isActive 
+                    ? "bg-primary text-white shadow-md shadow-primary/20" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </nav>
   );
 }

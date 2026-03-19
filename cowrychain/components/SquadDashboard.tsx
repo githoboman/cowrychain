@@ -1,6 +1,11 @@
 import { ArrowLeft, Users, Trophy, Wallet, Link as LinkIcon, Download, Share, X, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useSquadStore } from "@/lib/squad-store";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { parseAbi, erc20Abi } from "viem";
+import { VAULTS } from "@yo-protocol/core";
+import { parseAmount } from "@/lib/utils";
+import { USDC_ADDRESS_BASE, WETH_ADDRESS_BASE } from "@/lib/constants";
 
 interface SquadDashboardProps {
   squad: {
@@ -16,12 +21,15 @@ interface SquadDashboardProps {
   onBack: () => void;
 }
 
-const MOCK_MEMBERS = [
-  { address: "0x12..34", amount: 1200, isYou: true },
-  { address: "0xAb..Cd", amount: 800, isYou: false },
-  { address: "0x88..99", amount: 650, isYou: false },
-  { address: "0x44..55", amount: 500, isYou: false },
-];
+// Random deterministic string generator based on Seed
+const generateAddress = (seed: number) => {
+  const chars = "0123456789abcdef";
+  let addr = "0x";
+  for (let i = 0; i < 4; i++) addr += chars[(seed * i * 31) % 16];
+  addr += "..";
+  for (let i = 0; i < 4; i++) addr += chars[(seed * i * 73) % 16];
+  return addr;
+};
 
 export function SquadDashboard({ squad: initialSquad, onBack }: SquadDashboardProps) {
   const { squads, depositToSquad } = useSquadStore();
@@ -34,16 +42,87 @@ export function SquadDashboard({ squad: initialSquad, onBack }: SquadDashboardPr
   const [depositAmount, setDepositAmount] = useState("");
   const [depositStep, setDepositStep] = useState<"idle" | "depositing">("idle");
 
+  const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+
+  const isUSDC = squad.asset === "USDC";
+  const assetAddress = isUSDC ? USDC_ADDRESS_BASE : WETH_ADDRESS_BASE;
+  const assetDecimals = isUSDC ? 6 : 18;
+  const vaultAddress = isUSDC ? (VAULTS as any)["yoUSD"]?.address : (VAULTS as any)["yoETH"]?.address;
+
+  const { data: allowance } = useReadContract({
+    address: assetAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: address ? [address, vaultAddress] : undefined,
+    query: { enabled: !!address && !!vaultAddress }
+  });
+
+  const paymasterCapabilities = {
+    paymasterService: {
+      url: process.env.NEXT_PUBLIC_PAYMASTER_URL || "https://api.developer.coinbase.com/rpc/v1/base/YOUR_API_KEY",
+    }
+  };
+
   const handleDeposit = async () => {
     const amt = Number(depositAmount);
-    if (amt <= 0) return;
-    setDepositStep("depositing");
-    await new Promise(r => setTimeout(r, 1000));
-    depositToSquad(squad.id, amt);
-    setDepositStep("idle");
-    setIsDepositOpen(false);
-    setDepositAmount("");
+    if (amt <= 0 || !address || !vaultAddress) return;
+    
+    try {
+      setDepositStep("depositing");
+      const parsedAmount = parseAmount(depositAmount, assetDecimals);
+
+      // Execute Real Wagmi Transaction (Approval)
+      if ((allowance ?? 0n) < parsedAmount) {
+        await writeContractAsync({
+          address: assetAddress,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [vaultAddress, parsedAmount],
+          capabilities: paymasterCapabilities
+        } as any);
+        await new Promise(r => setTimeout(r, 2000));
+      }
+
+      // Execute Real Wagmi Transaction (Deposit to YO Protocol)
+      await writeContractAsync({
+        address: vaultAddress as `0x${string}`,
+        abi: parseAbi(["function deposit(uint256 assets, address receiver) returns (uint256)"]),
+        functionName: "deposit",
+        args: [parsedAmount, address],
+        capabilities: paymasterCapabilities
+      } as any);
+
+      depositToSquad(squad.id, amt);
+      setDepositStep("idle");
+      setIsDepositOpen(false);
+      setDepositAmount("");
+    } catch (err) {
+      console.error(err);
+      setDepositStep("idle");
+    }
   };
+
+  // Dynamically partition the squad's current balance across the `members` count
+  // Your share is roughly determined dynamically (e.g. 60% of pool or exactly input amount ideally)
+  const remainingForOthers = Math.max(0, squad.current * 0.4);
+  const generatorSeed = squad.name.charCodeAt(0) + squad.id.length;
+
+  const dynamicMembers = Array.from({ length: squad.members }).map((_, i) => {
+    if (i === 0) return { 
+      address: address ? `${address.slice(0, 6)}..${address.slice(-4)}` : "0xYou..", 
+      amount: squad.current === 0 ? 0 : squad.current - remainingForOthers, 
+      isYou: true 
+    };
+    
+    // Distribute remaining evenlyish among fake members
+    const fakeFraction = remainingForOthers / (squad.members - 1);
+    return {
+      address: generateAddress(generatorSeed + i),
+      amount: fakeFraction,
+      isYou: false
+    };
+  }).sort((a, b) => b.amount - a.amount);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-300">
@@ -113,8 +192,8 @@ export function SquadDashboard({ squad: initialSquad, onBack }: SquadDashboardPr
         </h3>
         
         <div className="space-y-4">
-          {MOCK_MEMBERS.map((member, index) => (
-            <div key={member.address} className={`flex items-center justify-between p-4 rounded-2xl ${member.isYou ? 'bg-primary/10 border border-primary/20' : 'bg-secondary/50 border border-border/50'}`}>
+          {dynamicMembers.map((member, index) => (
+            <div key={member.address + index} className={`flex items-center justify-between p-4 rounded-2xl ${member.isYou ? 'bg-primary/10 border border-primary/20' : 'bg-secondary/50 border border-border/50'}`}>
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-bold text-lg border border-border">
                   {index === 0 ? '👑' : index + 1}
@@ -128,8 +207,8 @@ export function SquadDashboard({ squad: initialSquad, onBack }: SquadDashboardPr
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-lg text-white">{member.amount} {squad.asset}</div>
-                <div className="text-xs text-[#6b9e7e]">{(member.amount / squad.current * 100).toFixed(1)}% of pool</div>
+                <div className="font-bold text-lg text-white">{member.amount.toFixed(2)} {squad.asset}</div>
+                <div className="text-xs text-[#6b9e7e]">{squad.current > 0 ? (member.amount / squad.current * 100).toFixed(1) : 0}% of pool</div>
               </div>
             </div>
           ))}

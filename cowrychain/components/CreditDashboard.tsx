@@ -3,22 +3,32 @@
 import { CreditCard, TrendingDown, DollarSign, Clock, ShieldCheck, Info } from "lucide-react";
 import { useState } from "react";
 import { BorrowModal } from "./modals/BorrowModal";
+import { useTokenBalance } from "@yo-protocol/react";
+import { useAccount } from "wagmi";
+import { VAULTS } from "@yo-protocol/core";
+import { useCreditStore } from "@/lib/credit-store";
+import { formatUnits } from "viem";
 
 export function CreditDashboard() {
   const [isBorrowOpen, setIsBorrowOpen] = useState(false);
+  const { address } = useAccount();
+  const yoUsdAddress = (VAULTS as any)["yoUSD"]?.address;
+  const { balance } = useTokenBalance(yoUsdAddress as any, address);
 
-  // Mock data for the borrowing module
-  const collateralBalance = 4500; // yoUSD
+  const rawCollateral = (balance as any)?.value ?? 0n;
+  const collateralBalance = Number(formatUnits(rawCollateral, 6));
+
+  const { currentDebt, totalPaid } = useCreditStore();
+
   const maxLtv = 0.5; // 50%
-  const creditLimit = collateralBalance * maxLtv;
-  const currentDebt = 850;
-  const currentLtv = currentDebt / collateralBalance;
+  const creditLimit = Math.max(0, collateralBalance * maxLtv);
+  const currentLtv = collateralBalance > 0 ? currentDebt / collateralBalance : 0;
   const apy = 12.5; // 12.5% APY on the collateral
 
   // Time until debt is $0
   const annualYield = collateralBalance * (apy / 100);
-  const yearsToRepay = currentDebt / annualYield;
-  const monthsToRepay = Math.ceil(yearsToRepay * 12);
+  const yearsToRepay = annualYield > 0 ? currentDebt / annualYield : 99;
+  const monthsToRepay = currentDebt > 0 ? Math.ceil(yearsToRepay * 12) : 0;
 
   return (
     <div className="space-y-8">
@@ -75,7 +85,7 @@ export function CreditDashboard() {
             </div>
             <div>
               <div className="text-sm text-muted-foreground mb-1">Total Paid</div>
-              <div className="font-bold text-white">$142.50</div>
+              <div className="font-bold text-white">${totalPaid.toFixed(2)}</div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground mb-1">Status</div>
