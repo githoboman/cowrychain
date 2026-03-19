@@ -5,9 +5,9 @@ import { useAccount, useDisconnect } from "wagmi";
 import { shortenAddress } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { GasTracker } from "./GasTracker";
 
@@ -15,6 +15,7 @@ export function Navbar() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -44,6 +45,19 @@ export function Navbar() {
           </div>
         </div>
       </Link>
+
+      <div className="flex items-center gap-2">
+        {/* Dynamic Back Button */}
+        {pathname !== "/" && (
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/80 border border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          >
+            <ArrowLeft size={16} />
+            <span className="hidden sm:inline text-sm font-bold">Back</span>
+          </button>
+        )}
+      </div>
 
       {/* Desktop Nav links */}
       <div className="hidden lg:flex items-center gap-1 bg-secondary/50 p-1 rounded-2xl border border-border/50 absolute left-1/2 -translate-x-1/2">

@@ -15,6 +15,20 @@ export function formatAmount(
   });
 }
 
+export function formatCompactAmount(
+  amount: bigint | undefined,
+  decimals: number = 6
+): string {
+  if (amount === undefined || amount === null) return "0.0";
+  const formatted = formatUnits(amount, decimals);
+  const num = parseFloat(formatted);
+  if (isNaN(num)) return "0.0";
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(num);
+}
+
 export function parseAmount(amount: string, decimals: number = 6): bigint {
   try {
     if (!amount || amount === "") return 0n;

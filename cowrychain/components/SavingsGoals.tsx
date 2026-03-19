@@ -8,6 +8,9 @@ import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { useUserPositions } from "@yo-protocol/react";
 import { formatAmount } from "@/lib/utils";
+import { VAULT_META } from "@/lib/constants";
+import { useGoalStore } from "@/lib/goal-store";
+import { DepositModal } from "./modals/DepositModal";
 
 export function SavingsGoals() {
   const { address, isConnected } = useAccount();
@@ -20,28 +23,27 @@ export function SavingsGoals() {
   
   const totalAssetsNum = parseFloat(formatUnits(totalAssets, 6));
 
-  const [goals, setGoals] = useState([
-    { id: 1, name: "New Laptop", target: 2000, color: "#10b981", duration: "3 Months" },
-    { id: 2, name: "Summer Trip", target: 5000, color: "#3b82f6", duration: "6 Months" },
-  ]);
+  const { goals, addGoal } = useGoalStore();
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fastDepositOpen, setFastDepositOpen] = useState(false);
   const [newGoal, setNewGoal] = useState({ name: "", target: "", duration: "" });
 
   const handleAddGoal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGoal.name || !newGoal.target) return;
 
-    const id = goals.length + 1;
+    const id = Date.now();
     const colors = ["#10b981", "#3b82f6", "#f59e0b", "#ec4899", "#8b5cf6"];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-    setGoals([...goals, {
+    addGoal({
       id,
       name: newGoal.name,
       target: parseFloat(newGoal.target),
       color: randomColor,
       duration: newGoal.duration
-    }]);
+    });
 
     setNewGoal({ name: "", target: "", duration: "" });
     setIsModalOpen(false);
@@ -106,6 +108,13 @@ export function SavingsGoals() {
                 
                 <div className="flex justify-between mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tighter items-center">
                   <span>{progress.toFixed(0)}% reached</span>
+                  
+                  <button 
+                    onClick={() => setFastDepositOpen(true)}
+                    className="text-primary hover:text-emerald-400 italic underline-offset-2 hover:underline tracking-normal normal-case"
+                  >
+                    + Deposit Funds
+                  </button>
                 </div>
               </motion.div>
             );
@@ -191,6 +200,16 @@ export function SavingsGoals() {
               </form>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {fastDepositOpen && (
+          <DepositModal 
+            vaultId="yoUSD"
+            meta={VAULT_META["yoUSD"]}
+            onClose={() => setFastDepositOpen(false)} 
+          />
         )}
       </AnimatePresence>
     </div>

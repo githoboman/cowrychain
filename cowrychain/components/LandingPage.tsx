@@ -6,7 +6,7 @@ import { ArrowRight, Shield, Zap, TrendingUp, Globe, Smartphone, PiggyBank, Refr
 import { motion } from "framer-motion";
 import { useTotalTvl, useVaults } from "@yo-protocol/react";
 import { formatUnits } from "viem";
-import { formatAmount } from "@/lib/utils";
+import { formatAmount, formatCompactAmount } from "@/lib/utils";
 
 export function LandingPage() {
   const { tvl } = useTotalTvl();
@@ -80,7 +80,7 @@ export function LandingPage() {
               </ConnectButton.Custom>
               <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
                 <Globe size={18} />
-                <span>Join {formatAmount(protocolTvl, 6, 0)}+ savers</span>
+                <span>Join {formatCompactAmount(protocolTvl, 6)}+ savers</span>
               </div>
             </div>
           </motion.div>
@@ -99,7 +99,7 @@ export function LandingPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Your Savings</p>
-                    <p className="text-3xl font-bold">${formatAmount(protocolTvl, 6, 2)}</p>
+                    <p className="text-3xl font-bold">${formatCompactAmount(protocolTvl, 6)}</p>
                   </div>
                </div>
 
@@ -121,7 +121,7 @@ export function LandingPage() {
                <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-3xl bg-primary/10 border border-primary/20 flex flex-col items-center gap-1 italic">
                     <span className="text-xs uppercase font-bold text-primary not-italic">Daily Projection</span>
-                    <span className="text-xl font-bold">+${formatAmount(protocolTvl / (365n * 10n), 6, 2)}</span>
+                    <span className="text-xl font-bold">+${formatCompactAmount(protocolTvl / (365n * 10n), 6)}</span>
                   </div>
                   <div className="p-4 rounded-3xl bg-secondary/50 border border-border flex flex-col items-center gap-1">
                     <span className="text-xs uppercase font-bold text-muted-foreground">Active Systems</span>

@@ -23,7 +23,7 @@ export function GasTracker() {
         : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
     }`}>
       <Activity size={14} className={isHigh ? "animate-pulse" : ""} />
-      <span>{gwei} Gwei</span>
+      <span>Gas: {gwei} Gwei</span>
     </div>
   );
 }

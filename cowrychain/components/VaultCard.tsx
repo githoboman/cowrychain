@@ -7,7 +7,7 @@ import {
   useUserPosition,
   useVaultHistory,
 } from "@yo-protocol/react";
-import { formatAmount, formatAPY } from "@/lib/utils";
+import { formatAmount, formatAPY, formatCompactAmount } from "@/lib/utils";
 import { VAULT_META } from "@/lib/constants";
 import { ArrowDownToLine, ArrowUpFromLine, TrendingUp, Info, Target, PiggyBank } from "lucide-react";
 import { DepositModal } from "./modals/DepositModal";
@@ -115,7 +115,7 @@ export function VaultCard({ vaultId }: VaultCardProps) {
               {stateLoading ? (
                 <span className="shimmer inline-block w-20 h-5 rounded-lg" />
               ) : (
-                `$${formatAmount(tvl, 6, 0)}`
+                `$${formatCompactAmount(tvl, 6)}`
               )}
             </div>
           </div>
