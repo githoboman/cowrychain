@@ -15,9 +15,8 @@ CowryChain lets anyone save in USDC or ETH and earn optimized DeFi yield automat
 
 - ⛽ **100% Gasless (EIP-5792)** — Approvals and deposits are fully sponsored via Coinbase Smart Wallet Paymasters.
 - ⚡ **Auto-Zapping (0x API)** — Instantly swap any token (cbBTC, DEGEN, AERO) directly into Vault shares in one click.
-- 🤝 **Squad Savings (Multiplayer Yield)** — Pool yields with friends or DAOs to accelerate APY in shared trustless vaults.
-- 💳 **Self-Repaying Loans** — Borrow cUSD against your yield-bearing collateral instantly with 0 risk of liquidation.
-- 🤖 **Smart DCA Automations** — Set duration-based recurring goals and let the protocol automate future deposits.
+- 🏅 **Gamified Achievements** — Unlock dynamic UI badges directly verified by your active on-chain Collateral balances.
+- ⛽ **Live Gas Tracking** — A beautiful real-time widget monitoring the heart of the Base network congestion.
 - 💵 **Dollar Stash (yoUSD)** — Deposit USDC and earn optimized stable yield natively.
 - ⟠ **Ether Stash (yoETH)** — Deposit ETH and earn risk-adjusted yield.
 - 📊 **Real-time Portfolio Dashboard** — Live balance, APY, and yield tracking.
@@ -106,9 +105,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 |---|---|
 | `/` | Home — Landing page (unauthenticated) or Dashboard (connected) |
 | `/vaults` | Browse and filter all available YO Protocol vaults |
-| `/save` | Set savings goals, execute Token Zapping, and automate recurring DCA deposits |
-| `/squads` | **Multiplayer DeFi** — Create and manage group savings vaults |
-| `/credit` | **Self-Repaying Loans** — Borrow against your active collateral without liquidations |
+| `/save` | Set savings goals and execute Token Zapping |
+| `/achievements` | View unlocked Gamification badges based on your verified Balance |
+| `/coming-soon` | Detailed Roadmap exposing futuristic Protocol features |
 | `/portfolio` | Full portfolio overview with positions and history |
 | `/settings` | User settings |
 
@@ -218,15 +217,6 @@ npm run start
    - `NEXT_PUBLIC_IS_TESTNET`
    - `NEXT_PUBLIC_EXPLORER_URL`
 4. Deploy!
-
-### Smart Contract Deployment (Mainnet)
-The project includes raw Solidity proxy contracts under `contracts/` for powering the authentic backend of the Squads and Credit modules. We have pre-configured Hardhat for Base Mainnet execution.
-
-1. Ensure your `.env` contains `PRIVATE_KEY` and `BASESCAN_API_KEY`.
-2. Run the deployment script to compile and push the intelligent proxy contracts directly to Base:
-```bash
-npx hardhat run scripts/deploy.ts --network base
-```
 
 ### Other Platforms
 

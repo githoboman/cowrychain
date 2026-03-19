@@ -17,19 +17,19 @@ export function LandingPage() {
 
   const features = [
     {
-      icon: <Shield className="text-primary" />,
-      title: "Non-Custodial",
-      description: "You're always in control. Your funds are locked in audited smart contracts, not our bank account."
+      icon: <Zap className="text-primary" />,
+      title: "100% Gasless. Always.",
+      description: "Sign transactions with Coinbase Smart Wallet. We pay the gas. No hidden fees, no friction."
     },
     {
-      icon: <Zap className="text-primary" />,
-      title: "Instant Liquidity",
-      description: "No lock-ups. Withdraw your savings and earned yield anytime with a single click."
+      icon: <Shield className="text-primary" />,
+      title: "Gamified Savings",
+      description: "Unlock premium on-chain badges based on your verified Collateral balance. Prove your Diamond Hands."
     },
     {
       icon: <TrendingUp className="text-primary" />,
-      title: "Optimized Yield",
-      description: "Automated routing through YO Protocol ensures you stay in the highest-performing vaults."
+      title: "Auto-Zapping",
+      description: "Swap cbBTC, DEGEN, or any Token seamlessly into Vault shares in one unified click via 0x Router."
     }
   ];
 
@@ -200,24 +200,24 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                title: "Deep SDK Integration",
-                desc: "Full integration with @yo-protocol/react for real-time vault states, user positions, and instant transaction previews.",
-                tag: "Core Engine"
+                title: "Live Gamification",
+                desc: "Real-time Wagmi scanners award animated cryptographic badges the moment your Collateral crosses milestones.",
+                tag: "Achievements"
               },
               {
-                title: "Dynamic Yield Projections",
-                desc: "Interactive calculators that derive future value based on live onchain APY and auto-compounding math.",
-                tag: "Logic"
+                title: "Zero-Gas Engine",
+                desc: "Integrated EIP-5792 payload capabilities completely eliminate transaction friction for Smart Wallet users.",
+                tag: "Paymasters"
               },
               {
-                title: "Intelligent Goal Engine",
-                desc: "Custom-built tracking system that allows you to label and monitor your funds for specific life milestones.",
-                tag: "UX"
+                title: "Cross-Chain Zapping",
+                desc: "Live 0x API integration automatically routes any token deposited into native YO Protocol vault shares.",
+                tag: "Routing"
               },
               {
-                title: "Institutional UI System",
-                desc: "A custom CSS architecture with full light/dark mode support, glassmorphism, and responsive design systems.",
-                tag: "Design"
+                title: "Network Telemetry",
+                desc: "A globally active Gas Tracker monitors the Base network congestion heartbeat dynamically block-by-block.",
+                tag: "Analytics"
               }
             ].map((item, i) => (
               <div key={i} className="p-6 rounded-[2.5rem] bg-background border border-border/60 hover:border-primary/40 transition-all group">

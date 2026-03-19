@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { GasTracker } from "./GasTracker";
 
 export function Navbar() {
   const { address, isConnected } = useAccount();
@@ -20,8 +21,8 @@ export function Navbar() {
     { label: "Dashboard", href: "/" },
     { label: "Vaults", href: "/vaults" },
     { label: "Save", href: "/save" },
-    { label: "Squads", href: "/squads" },
-    { label: "Credit", href: "/credit" },
+    { label: "Achievements", href: "/achievements" },
+    { label: "Roadmap", href: "/coming-soon" },
     { label: "Portfolio", href: "/portfolio" },
   ];
 
@@ -67,6 +68,7 @@ export function Navbar() {
 
       {/* Actions */}
       <div className="flex items-center gap-3">
+        <GasTracker />
         <ThemeToggle />
         
         {address && (
