@@ -1,11 +1,13 @@
-import { X, Target, Users, ArrowRight } from "lucide-react";
+import { X, Target, Users, ArrowRight, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useSquadStore } from "@/lib/squad-store";
 
 export function CreateSquadModal({ onClose }: { onClose: () => void }) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<"idle" | "deploying">("idle");
   const [name, setName] = useState("");
   const [target, setTarget] = useState("");
   const [asset, setAsset] = useState("USDC");
+  const { createSquad } = useSquadStore();
 
   const isComplete = name.trim().length > 0 && Number(target) > 0;
 
@@ -60,14 +62,27 @@ export function CreateSquadModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <button 
-            disabled={!isComplete}
-            onClick={() => {
+            disabled={!isComplete || step === "deploying"}
+            onClick={async () => {
+              setStep("deploying");
               // Simulate contract deployment
-              setTimeout(onClose, 1000);
+              await new Promise(r => setTimeout(r, 1500));
+              createSquad({
+                name,
+                target: Number(target),
+                asset,
+                apy: asset === "USDC" ? "12.4%" : "5.8%",
+                color: asset === "USDC" ? "#22c55e" : "#3b82f6"
+              });
+              onClose();
             }}
             className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Deploy Squad Vault <ArrowRight size={18} />
+            {step === "deploying" ? (
+              <><Loader2 size={18} className="animate-spin" /> Deploying...</>
+            ) : (
+              <>Deploy Squad Vault <ArrowRight size={18} /></>
+            )}
           </button>
         </div>
 

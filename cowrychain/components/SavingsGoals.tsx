@@ -22,12 +22,12 @@ export function SavingsGoals() {
   const totalAssetsNum = parseFloat(formatUnits(totalAssets, 6));
 
   const [goals, setGoals] = useState([
-    { id: 1, name: "New Laptop", target: 2000, color: "#10b981", automated: false },
-    { id: 2, name: "Summer Trip", target: 5000, color: "#3b82f6", automated: true },
+    { id: 1, name: "New Laptop", target: 2000, color: "#10b981", automated: false, duration: "3 Months" },
+    { id: 2, name: "Summer Trip", target: 5000, color: "#3b82f6", automated: true, duration: "6 Months" },
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [automateGoal, setAutomateGoal] = useState<{ id: number; name: string } | null>(null);
-  const [newGoal, setNewGoal] = useState({ name: "", target: "" });
+  const [newGoal, setNewGoal] = useState({ name: "", target: "", duration: "" });
 
   const handleAddGoal = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +42,11 @@ export function SavingsGoals() {
       name: newGoal.name,
       target: parseFloat(newGoal.target),
       color: randomColor,
-      automated: false
+      automated: false,
+      duration: newGoal.duration
     }]);
 
-    setNewGoal({ name: "", target: "" });
+    setNewGoal({ name: "", target: "", duration: "" });
     setIsModalOpen(false);
   };
 
@@ -86,7 +87,9 @@ export function SavingsGoals() {
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h4 className="font-bold text-sm group-hover:text-primary transition-colors">{goal.name}</h4>
+                    <h4 className="font-bold text-sm group-hover:text-primary transition-colors flex items-center gap-2">
+                       {goal.name} {goal.duration && <span className="text-[10px] bg-secondary px-2 py-0.5 rounded text-muted-foreground tracking-normal uppercase border border-border">{goal.duration}</span>}
+                    </h4>
                     <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest mt-0.5">
                       ${current.toLocaleString(undefined, { maximumFractionDigits: 0 })} / ${goal.target.toLocaleString()}
                     </p>
@@ -170,6 +173,22 @@ export function SavingsGoals() {
                     placeholder="2500"
                     className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50"
                   />
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 block">
+                    Duration (Optional)
+                  </label>
+                  <select
+                    value={newGoal.duration}
+                    onChange={(e) => setNewGoal({ ...newGoal, duration: e.target.value })}
+                    className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 text-white"
+                  >
+                    <option value="">No deadline</option>
+                    <option value="1 Month">1 Month</option>
+                    <option value="3 Months">3 Months</option>
+                    <option value="6 Months">6 Months</option>
+                    <option value="1 Year">1 Year</option>
+                  </select>
                 </div>
                 <div className="pt-4 flex gap-3">
                   <button

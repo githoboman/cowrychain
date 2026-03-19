@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt, useReadContract, useWriteContract } from "wagmi";
+import { parseAbi, erc20Abi } from "viem";
+import { VAULTS } from "@yo-protocol/core";
 import {
-  useDeposit,
   useTokenBalance,
   usePreviewDeposit,
 } from "@yo-protocol/react";
@@ -41,6 +42,10 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
   const [zapQuote, setZapQuote] = useState<ZapQuote | null>(null);
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
+  const [zapTxHash, setZapTxHash] = useState<`0x${string}`>();
+  const [protocolStep, setProtocolStep] = useState<"idle" | "approving" | "depositing" | "success" | "error">("idle");
+  const [depositError, setDepositError] = useState<Error | null>(null);
+  const [depositTxHash, setDepositTxHash] = useState<`0x${string}`>();
   const [simulatedZapStep, setSimulatedZapStep] = useState<"idle" | "zapping" | "done">("idle");
 
   const assetConfig = VAULT_ASSET_CONFIG[vaultId] ?? VAULT_ASSET_CONFIG.yoUSD;
@@ -62,16 +67,26 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
     depositTargetAmount > 0n ? depositTargetAmount : undefined
   );
 
-  const {
-    deposit,
-    reset,
-    step: protocolStep,
-    isLoading: isProtocolLoading,
-    isSuccess,
-    error,
-    approveHash,
-    hash: depositTxHash,
-  } = useDeposit({ vault: vaultId as any });
+  const targetVaultAddress = (VAULTS as any)[vaultId]?.address as `0x${string}`;
+
+  // Read current allowance
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: assetAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: address ? [address, targetVaultAddress] : undefined,
+    query: { enabled: !!address && !!targetVaultAddress }
+  });
+
+  const { writeContractAsync } = useWriteContract();
+  const { sendTransactionAsync } = useSendTransaction();
+  const { isSuccess: isZapConfirmed } = useWaitForTransactionReceipt({ hash: zapTxHash });
+
+  const paymasterCapabilities = {
+    paymasterService: {
+      url: process.env.NEXT_PUBLIC_PAYMASTER_URL || "https://api.developer.coinbase.com/rpc/v1/base/YOUR_API_KEY",
+    }
+  };
 
   // Fetch Zap Quote when amount/asset changes
   useEffect(() => {
@@ -91,27 +106,95 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
 
 
   const handleDeposit = useCallback(async () => {
-    if (!parsedAmount || parsedAmount <= 0n) return;
+    if (!parsedAmount || parsedAmount <= 0n || !targetVaultAddress || !address) return;
+    setDepositError(null);
 
-    if (isZapping) {
-      // Simulate the 1inch Zap routing execution natively
-      setSimulatedZapStep("zapping");
-      await new Promise(res => setTimeout(res, 2500)); // fake zap delay
-      setSimulatedZapStep("done");
-      // Fall through to deposit using the exact target amount assuming the mock relayer gave us WETH/USDC
-      await deposit({ token: assetAddress, amount: zapQuote?.expectedOutputAmount || 0n, chainId: YO_CHAIN_ID });
-    } else {
-      await deposit({ token: assetAddress, amount: parsedAmount, chainId: YO_CHAIN_ID });
+    try {
+      if (isZapping && zapQuote?.txData && zapQuote?.txTo) {
+        setSimulatedZapStep("zapping");
+        
+        const hash = await sendTransactionAsync({
+          to: zapQuote.txTo,
+          data: zapQuote.txData,
+          value: zapQuote.txValue || 0n,
+          capabilities: paymasterCapabilities
+        } as any);
+        
+        setZapTxHash(hash);
+        await new Promise(res => setTimeout(res, 2500)); 
+        setSimulatedZapStep("done");
+        
+        // Ensure approval for the target deposit of the swapped amount
+        if ((allowance ?? 0n) < zapQuote.expectedOutputAmount) {
+          setProtocolStep("approving");
+          await writeContractAsync({
+            address: assetAddress,
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [targetVaultAddress, zapQuote.expectedOutputAmount],
+            capabilities: paymasterCapabilities
+          } as any);
+          await new Promise(res => setTimeout(res, 2000));
+        }
+
+        setProtocolStep("depositing");
+        const depHash = await writeContractAsync({
+          address: targetVaultAddress,
+          abi: parseAbi(["function deposit(uint256 assets, address receiver) returns (uint256)"]),
+          functionName: "deposit",
+          args: [zapQuote.expectedOutputAmount, address],
+          capabilities: paymasterCapabilities
+        } as any);
+        
+        setDepositTxHash(depHash);
+        setProtocolStep("success");
+      } else {
+        // Standard Deposit
+        if ((allowance ?? 0n) < parsedAmount) {
+          setProtocolStep("approving");
+          await writeContractAsync({
+            address: assetAddress,
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [targetVaultAddress, parsedAmount],
+            capabilities: paymasterCapabilities
+          } as any);
+          await new Promise(res => setTimeout(res, 2000));
+        }
+
+        setProtocolStep("depositing");
+        const depHash = await writeContractAsync({
+          address: targetVaultAddress,
+          abi: parseAbi(["function deposit(uint256 assets, address receiver) returns (uint256)"]),
+          functionName: "deposit",
+          args: [parsedAmount, address],
+          capabilities: paymasterCapabilities
+        } as any);
+        
+        setDepositTxHash(depHash);
+        setProtocolStep("success");
+      }
+    } catch (err: any) {
+      console.error("Deposit Flow Error:", err);
+      setDepositError(err);
+      setSimulatedZapStep("idle");
+      setProtocolStep("error");
     }
-  }, [deposit, parsedAmount, assetAddress, isZapping, zapQuote]);
+  }, [sendTransactionAsync, writeContractAsync, parsedAmount, assetAddress, isZapping, zapQuote, targetVaultAddress, address, allowance]);
 
   const handleClose = () => {
-    if (isSuccess) reset();
+    if (protocolStep === "success") {
+      setProtocolStep("idle");
+      setDepositTxHash(undefined);
+    }
     onClose();
   };
 
   const currentStep = simulatedZapStep === "zapping" ? "zapping" : protocolStep;
-  const isLoading = isProtocolLoading || simulatedZapStep === "zapping";
+  const isLoading = 
+    protocolStep === "approving" || 
+    protocolStep === "depositing" || 
+    simulatedZapStep === "zapping";
 
   const stepLabels: Record<string, string> = {
     idle: "Ready",
@@ -156,7 +239,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
         </div>
 
         {/* Success state */}
-        {isSuccess ? (
+        {protocolStep === "success" ? (
           <div className="p-6 pt-2 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 size={32} className="text-primary" />
@@ -290,10 +373,10 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
             )}
 
             {/* Error */}
-            {error && (
+            {depositError && (
               <div className="flex items-start gap-2 p-3 rounded-xl bg-red-900/20 border border-red-500/20 text-red-400 text-sm">
                 <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                <span>{error.message?.slice(0, 100) ?? "Transaction failed"}</span>
+                <span>{depositError.message?.slice(0, 100) ?? "Transaction failed"}</span>
               </div>
             )}
 
@@ -302,7 +385,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
               <div className="flex items-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm">
                 <Loader2 size={16} className="animate-spin" />
                 <span>{stepLabels[currentStep] ?? "Processing..."}</span>
-                {approveHash && currentStep === "depositing" && (
+                {protocolStep === "approving" && currentStep === "depositing" && (
                   <span className="text-xs text-[#6b9e7e] ml-auto">Approved ✓</span>
                 )}
               </div>

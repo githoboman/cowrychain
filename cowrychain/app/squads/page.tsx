@@ -5,33 +5,12 @@ import { useState } from "react";
 import { CreateSquadModal } from "@/components/modals/CreateSquadModal";
 import { SquadDashboard } from "@/components/SquadDashboard";
 
-// Mock Data for Squads
-const MOCK_SQUADS = [
-  {
-    id: "sq-1",
-    name: "Vacation to Bali 🌴",
-    target: 5000,
-    current: 3150,
-    members: 4,
-    apy: "12.4%",
-    asset: "USDC",
-    color: "#22c55e",
-  },
-  {
-    id: "sq-2",
-    name: "ETH Accumulation DAO 🔷",
-    target: 10,
-    current: 6.2,
-    members: 12,
-    apy: "5.8%",
-    asset: "WETH",
-    color: "#3b82f6",
-  }
-];
+import { useSquadStore } from "@/lib/squad-store";
 
 export default function SquadsPage() {
+  const { squads } = useSquadStore();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedSquad, setSelectedSquad] = useState<typeof MOCK_SQUADS[0] | null>(null);
+  const [selectedSquad, setSelectedSquad] = useState<any | null>(null);
 
   if (selectedSquad) {
     return (
@@ -68,7 +47,7 @@ export default function SquadsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MOCK_SQUADS.map(squad => {
+        {squads.map(squad => {
           const progress = (squad.current / squad.target) * 100;
           return (
             <div 
