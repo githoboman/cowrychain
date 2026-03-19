@@ -12,6 +12,7 @@ export interface Goal {
 interface GoalState {
   goals: Goal[];
   addGoal: (goal: Goal) => void;
+  removeGoal: (id: number) => void;
 }
 
 export const useGoalStore = create<GoalState>()(
@@ -22,6 +23,7 @@ export const useGoalStore = create<GoalState>()(
         { id: 2, name: "Summer Trip", target: 5000, color: "#3b82f6", duration: "6 Months" },
       ],
       addGoal: (goal) => set((state) => ({ goals: [...state.goals, goal] })),
+      removeGoal: (id) => set((state) => ({ goals: state.goals.filter((g) => g.id !== id) })),
     }),
     {
       name: "cowrychain-goals-storage",

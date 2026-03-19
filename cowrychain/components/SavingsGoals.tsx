@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Target, Plus, CheckCircle2 } from "lucide-react";
+import { Target, Plus, CheckCircle2, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatUnits } from "viem";
 
@@ -23,7 +23,7 @@ export function SavingsGoals() {
   
   const totalAssetsNum = parseFloat(formatUnits(totalAssets, 6));
 
-  const { goals, addGoal } = useGoalStore();
+  const { goals, addGoal, removeGoal } = useGoalStore();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fastDepositOpen, setFastDepositOpen] = useState(false);
@@ -93,7 +93,16 @@ export function SavingsGoals() {
                       ${current.toLocaleString(undefined, { maximumFractionDigits: 0 })} / ${goal.target.toLocaleString()}
                     </p>
                   </div>
-                  {progress >= 100 && <CheckCircle2 size={16} className="text-primary" />}
+                  <div className="flex items-center gap-2">
+                    {progress >= 100 && <CheckCircle2 size={16} className="text-primary" />}
+                    <button 
+                      onClick={() => removeGoal(goal.id)}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                      title="Delete Goal"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">

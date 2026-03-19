@@ -9,7 +9,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { LogOut, Menu, X, ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { GasTracker } from "./GasTracker";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Navbar() {
   const { address, isConnected } = useAccount();
@@ -82,7 +82,6 @@ export function Navbar() {
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        <GasTracker />
         <ThemeToggle />
         
         {address && (
@@ -120,28 +119,35 @@ export function Navbar() {
       </div>
 
       {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="absolute top-[73px] left-0 right-0 bg-card border-b border-border shadow-2xl p-4 flex flex-col gap-2 lg:hidden animate-in slide-in-from-top-2">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={clsx(
-                  "px-4 py-3 rounded-xl text-md font-bold transition-all duration-200",
-                  isActive 
-                    ? "bg-primary text-white shadow-md shadow-primary/20" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                )}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
-      )}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-[73px] left-0 right-0 bg-card border-b border-border shadow-2xl p-4 flex flex-col gap-2 lg:hidden"
+          >
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={clsx(
+                    "px-4 py-3 rounded-xl text-md font-bold transition-all duration-200",
+                    isActive 
+                      ? "bg-primary text-white shadow-md shadow-primary/20" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
