@@ -4,8 +4,10 @@ import { useAccount } from "wagmi";
 import { useGlobalVaultHistory } from "@yo-protocol/react";
 import { formatAmount } from "@/lib/utils";
 import { ArrowDownToLine, ArrowUpFromLine, Clock } from "lucide-react";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export function TransactionHistory() {
+  const t = useT();
   const { address, isConnected } = useAccount();
   const { history, isLoading } = useGlobalVaultHistory({ limit: 10 });
 
@@ -24,7 +26,7 @@ export function TransactionHistory() {
     return (
       <div className="rounded-2xl border border-[#1a4a2e] bg-[#0f2d1e] p-8 text-center">
         <div className="text-4xl mb-3">🔗</div>
-        <p className="text-[#6b9e7e]">Connect your wallet to see transaction history</p>
+        <p className="text-[#6b9e7e]">{t("history.connectPrompt")}</p>
       </div>
     );
   }

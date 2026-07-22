@@ -4,8 +4,10 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useTotalTvl } from "@yo-protocol/react";
 import { formatAmount } from "@/lib/utils";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export function HeroBanner() {
+  const t = useT();
   const { isConnected } = useAccount();
   const { tvl } = useTotalTvl();
 
@@ -25,7 +27,7 @@ export function HeroBanner() {
 
         <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight">
           The Smartest<br />
-          <span className="text-[#22c55e]">Onchain Savings</span><br />
+          <span className="text-[#22c55e]">{t("dashboard.hero.onchainSavings")}</span><br />
           Account
         </h1>
 

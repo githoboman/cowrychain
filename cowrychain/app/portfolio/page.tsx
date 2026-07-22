@@ -9,6 +9,7 @@ import { VAULT_META } from "@/lib/constants";
 import { formatAmount } from "@/lib/utils";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ExternalLink, TrendingUp } from "lucide-react";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 interface VaultMeta {
   name: string;
@@ -21,6 +22,7 @@ interface VaultMeta {
 }
 
 function VaultRow({ vaultId, meta }: { vaultId: string; meta: VaultMeta }) {
+  const t = useT();
   const { address } = useAccount();
   const { position, isLoading } = useUserPosition(vaultId as any, address);
   const { yieldHistory } = useVaultHistory(vaultId as any);
@@ -47,11 +49,11 @@ function VaultRow({ vaultId, meta }: { vaultId: string; meta: VaultMeta }) {
         <div className="text-xs text-[#6b9e7e]">{meta.assetSymbol} · {meta.tagline}</div>
       </div>
       <div className="text-center hidden sm:block">
-        <div className="text-xs text-[#6b9e7e] mb-0.5">Shares</div>
+        <div className="text-xs text-[#6b9e7e] mb-0.5">{t("portfolio.shares")}</div>
         <div className="text-sm font-medium text-white">{shareVal}</div>
       </div>
       <div className="text-center">
-        <div className="text-xs text-[#6b9e7e] mb-0.5">Value</div>
+        <div className="text-xs text-[#6b9e7e] mb-0.5">{t("portfolio.value")}</div>
         <div className="text-sm font-bold text-white">${assetVal}</div>
       </div>
       <div className="text-center">
@@ -71,6 +73,7 @@ function VaultRow({ vaultId, meta }: { vaultId: string; meta: VaultMeta }) {
 }
 
 export default function PortfolioPage() {
+  const t = useT();
   const { isConnected } = useAccount();
 
   return (
@@ -78,8 +81,8 @@ export default function PortfolioPage() {
       <Navbar />
       <main className="pt-20 min-h-screen max-w-5xl mx-auto px-4 sm:px-6 pb-16">
         <div className="mb-8 mt-8">
-          <h1 className="text-3xl font-black text-white mb-2">Portfolio</h1>
-          <p className="text-[#6b9e7e]">Track your savings across all YO vaults</p>
+          <h1 className="text-3xl font-black text-white mb-2">{t("portfolio.title")}</h1>
+          <p className="text-[#6b9e7e]">{t("portfolio.subtitle")}</p>
         </div>
 
         {!isConnected ? (
@@ -87,8 +90,8 @@ export default function PortfolioPage() {
             <div className="w-16 h-16 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center mx-auto mb-4">
               <TrendingUp size={28} className="text-[#22c55e]" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Connect to View Portfolio</h2>
-            <p className="text-[#6b9e7e] mb-6">Connect your wallet to see your DeFi savings portfolio</p>
+            <h2 className="text-xl font-bold text-white mb-2">{t("portfolio.connectTitle")}</h2>
+            <p className="text-[#6b9e7e] mb-6">{t("portfolio.connectBody")}</p>
             <ConnectButton />
           </div>
         ) : (
@@ -98,7 +101,7 @@ export default function PortfolioPage() {
             <YieldChart initialAmount={1000} apy={8.64} months={12} />
 
             <div>
-              <h2 className="text-lg font-bold text-white mb-4">Active Positions</h2>
+              <h2 className="text-lg font-bold text-white mb-4">{t("portfolio.activePositions")}</h2>
               <div className="space-y-3">
                 {Object.entries(VAULT_META).map(([vaultId, meta]) => (
                   <VaultRow key={vaultId} vaultId={vaultId} meta={meta} />

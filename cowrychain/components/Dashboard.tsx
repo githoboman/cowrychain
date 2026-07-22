@@ -10,8 +10,12 @@ import { TransactionHistory } from "@/components/TransactionHistory";
 import { YieldCalculator } from "@/components/YieldCalculator";
 import { SavingsGoals } from "@/components/SavingsGoals";
 import { VAULT_IDS } from "@/lib/constants";
+import { useT } from "@/lib/i18n/LanguageProvider";
+
 
 export function Dashboard() {
+  const t = useT();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -29,12 +33,12 @@ export function Dashboard() {
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">Savings Vaults</h2>
-                <p className="text-sm text-muted-foreground mt-1">Select a vault to start earning yield on Base.</p>
+                <h2 className="text-2xl font-bold tracking-tight">{t("dashboard.vaults.title")}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{t("dashboard.vaults.subtitle")}</p>
               </div>
               <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl glass border-border/50">
                 <div className="w-2 h-2 rounded-full bg-primary pulse-primary" />
-                <span className="text-xs font-semibold text-primary">Live Yield</span>
+                <span className="text-xs font-semibold text-primary">{t("dashboard.liveYield")}</span>
               </div>
             </div>
 
@@ -48,7 +52,7 @@ export function Dashboard() {
             {/* Transaction History */}
             <div className="mt-10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold tracking-tight">Activity History</h2>
+                <h2 className="text-2xl font-bold tracking-tight">{t("dashboard.activityHistory")}</h2>
               </div>
               <div className="glass-card rounded-3xl overflow-hidden">
                  <TransactionHistory />
@@ -80,14 +84,14 @@ export function Dashboard() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-lg">🐚</div>
             <div>
               <span className="font-bold text-lg">CowryChain</span>
-              <p className="text-xs text-muted-foreground">The future of onchain savings.</p>
+              <p className="text-xs text-muted-foreground">{t("common.tagline")}</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-8 text-sm font-medium text-muted-foreground">
-            <Link href="/vaults" className="hover:text-primary transition-colors">Vaults</Link>
-            <Link href="/save" className="hover:text-primary transition-colors">Save</Link>
-            <Link href="/portfolio" className="hover:text-primary transition-colors">Portfolio</Link>
+            <Link href="/vaults" className="hover:text-primary transition-colors">{t("nav.vaults")}</Link>
+            <Link href="/save" className="hover:text-primary transition-colors">{t("nav.save")}</Link>
+            <Link href="/portfolio" className="hover:text-primary transition-colors">{t("nav.portfolio")}</Link>
           </div>
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

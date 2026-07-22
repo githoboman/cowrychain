@@ -13,6 +13,7 @@ import { ArrowDownToLine, ArrowUpFromLine, TrendingUp, Info, Target, PiggyBank }
 import { DepositModal } from "./modals/DepositModal";
 import { RedeemModal } from "./modals/RedeemModal";
 import { motion, AnimatePresence } from "framer-motion";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 interface VaultCardProps {
   vaultId: string;
@@ -23,12 +24,13 @@ export function VaultCard({ vaultId }: VaultCardProps) {
   const [showRedeem, setShowRedeem] = useState(false);
 
   const { address, isConnected } = useAccount();
+  const t = useT();
   const meta = VAULT_META[vaultId] ?? {
     name: vaultId,
-    description: "YO Protocol Vault",
+    description: t("vault.description"),
     icon: "🏦",
     color: "#10b981",
-    tagline: "Optimized Yield",
+    tagline: t("vault.tagline"),
     asset: "USDC",
     assetSymbol: "USDC",
   };
@@ -80,7 +82,7 @@ export function VaultCard({ vaultId }: VaultCardProps) {
                   </span>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-secondary px-2 py-0.5 rounded-lg">
                     <Target size={10} />
-                    Goal: Custom
+                    {t("vault.goalCustom")}
                   </div>
                 </div>
               </div>
@@ -90,13 +92,13 @@ export function VaultCard({ vaultId }: VaultCardProps) {
             <div className="text-right">
               <div className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1 justify-end font-bold uppercase tracking-widest">
                 <TrendingUp size={12} className="text-primary" />
-                Variable APY
+                {t("vault.variableApy")}
               </div>
               <div
                 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-br from-primary to-emerald-400"
               >
                 {histLoading ? (
-                  <span className="text-muted-foreground text-sm font-medium animate-pulse">Scanning...</span>
+                  <span className="text-muted-foreground text-sm font-medium animate-pulse">{t("common.scanning")}</span>
                 ) : (
                   apyDisplay
                 )}
@@ -110,7 +112,7 @@ export function VaultCard({ vaultId }: VaultCardProps) {
         {/* Stats */}
         <div className="px-7 py-5 bg-secondary/30 grid grid-cols-2 gap-4 border-y border-border/50">
           <div>
-            <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Vault TVL</div>
+            <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">{t("vault.tvl")}</div>
             <div className="text-lg font-bold text-foreground">
               {stateLoading ? (
                 <span className="shimmer inline-block w-20 h-5 rounded-lg" />
@@ -120,7 +122,7 @@ export function VaultCard({ vaultId }: VaultCardProps) {
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Base Asset</div>
+            <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">{t("vault.baseAsset")}</div>
             <div className="text-lg font-bold text-foreground flex items-center gap-1.5">
               <span>{meta.assetSymbol}</span>
               <div className="w-4 h-4 rounded-full bg-blue-500/20 text-[8px] flex items-center justify-center font-black">B</div>
@@ -136,7 +138,7 @@ export function VaultCard({ vaultId }: VaultCardProps) {
             ) : hasPosition ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Current Balance</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">{t("vault.currentBalance")}</div>
                   <div className="text-2xl font-black text-foreground">
                     ${formatAmount(userAssets, 6, 2)}
                   </div>
@@ -148,20 +150,20 @@ export function VaultCard({ vaultId }: VaultCardProps) {
                    <div
                     className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-sm"
                   >
-                    ● Yielding
+                    ● {t("vault.yielding")}
                   </div>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-3 p-4 rounded-2xl border border-dashed border-border text-muted-foreground text-sm">
                  <PiggyBank className="opacity-40" />
-                 <span>Start saving to grow your fortune.</span>
+                 <span>{t("vault.startSaving")}</span>
               </div>
             )
           ) : (
             <div className="flex items-center gap-3 p-4 rounded-2xl border border-dashed border-border text-muted-foreground text-sm italic">
                <Info size={16} />
-               Connect wallet to view position
+               {t("vault.connectToView")}
             </div>
           )}
         </div>
@@ -173,7 +175,7 @@ export function VaultCard({ vaultId }: VaultCardProps) {
             className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm transition-all shadow-xl bg-primary text-white hover:bg-emerald-600 hover:shadow-primary/30 active:scale-95 border-b-4 border-emerald-700"
           >
             <ArrowDownToLine size={18} />
-            Save Now
+            {t("vault.saveNow")}
           </button>
           <AnimatePresence>
             {hasPosition && (
@@ -185,7 +187,7 @@ export function VaultCard({ vaultId }: VaultCardProps) {
                 className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm bg-secondary text-foreground hover:bg-muted transition-all border border-border active:scale-95"
               >
                 <ArrowUpFromLine size={18} />
-                Withdraw
+                {t("redeem.withdraw")}
               </motion.button>
             )}
           </AnimatePresence>

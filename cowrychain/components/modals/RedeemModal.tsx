@@ -6,6 +6,7 @@ import { useRedeem, usePreviewRedeem, usePendingRedemptions } from "@yo-protocol
 import { parseAmount, formatAmount } from "@/lib/utils";
 import { USDC_DECIMALS } from "@/lib/constants";
 import { X, ArrowUpFromLine, Loader2, CheckCircle2, AlertCircle, Clock, Info } from "lucide-react";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 interface RedeemModalProps {
   vaultId: string;
@@ -23,8 +24,10 @@ interface RedeemModalProps {
 export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalProps) {
   const [shareAmount, setShareAmount] = useState("");
   const { address } = useAccount();
+  const t = useT();
 
-  const parsedShares = parseAmount(shareAmount, 6);
+  const assetDecimals = vaultId === "yoETH" ? 18 : 6;
+  const parsedShares = parseAmount(shareAmount, assetDecimals);
   const { assets: previewAssets } = usePreviewRedeem(vaultId as any, parsedShares > 0n ? parsedShares : undefined);
   const { pendingRedemptions } = (usePendingRedemptions as any)(vaultId as any, address as any);
 
@@ -52,11 +55,11 @@ export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalP
   const isDisabled = !shareAmount || parsedShares <= 0n || isLoading || !address;
 
   const stepLabels: Record<string, string> = {
-    idle: "Ready",
-    approving: "Approving shares...",
-    redeeming: "Processing withdrawal...",
-    success: "Withdrawal initiated!",
-    error: "Transaction failed",
+    idle: t("redeem.step.ready"),
+    approving: t("redeem.step.approving"),
+    redeeming: t("redeem.step.redeeming"),
+    success: t("redeem.step.success"),
+    error: t("redeem.step.error"),
   };
 
   return (
@@ -74,7 +77,7 @@ export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalP
             </div>
             <div>
               <h2 className="font-bold text-white text-lg">Withdraw from {meta.name}</h2>
-               <p className="text-xs text-muted-foreground">Redeem your vault shares</p>
+               <p className="text-xs text-muted-foreground">{t("redeem.subtitle")}</p>
             </div>
           </div>
           <button onClick={handleClose} className="w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all flex items-center justify-center">
@@ -87,9 +90,9 @@ export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalP
             <div className="w-16 h-16 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 size={32} className="text-amber-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Withdrawal Initiated!</h3>
+            <h3 className="text-xl font-bold text-white mb-2">{t("redeem.initiated")}</h3>
             <p className="text-muted-foreground text-sm mb-4">
-              {instant ? "Instant redemption completed." : "Your redemption is queued. Funds will arrive shortly."}
+              {instant ? t("redeem.instantDone") : t("redeem.queued")}
             </p>
             {redeemTxHash && (
               <a href={`${process.env.NEXT_PUBLIC_EXPLORER_URL ?? "https://basescan.org"}/tx/${redeemTxHash}`} target="_blank" rel="noopener noreferrer" className="text-amber-400 text-sm hover:underline">
@@ -104,12 +107,12 @@ export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalP
           <div className="p-6 pt-2 space-y-5">
             {/* Balance */}
             <div className="flex items-center justify-between text-sm">
-               <span className="text-muted-foreground">Your shares</span>
+               <span className="text-muted-foreground">{t("redeem.yourShares")}</span>
               <button
                 className="font-medium text-amber-400 hover:text-amber-300 transition-colors"
-                onClick={() => setShareAmount(formatAmount(userShares, 6, 6))}
+                onClick={() => setShareAmount(formatAmount(userShares, assetDecimals, 6))}
               >
-                {formatAmount(userShares, 6, 4)} y{meta.assetSymbol} (max)
+                {formatAmount(userShares, assetDecimals, 4)} y{meta.assetSymbol} (max)
               </button>
             </div>
 
@@ -137,7 +140,7 @@ export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalP
                   onClick={() => {
                     const p = parseInt(pct) / 100;
                     const amt = (userShares * BigInt(Math.floor(p * 10000))) / 10000n;
-                    setShareAmount(formatAmount(amt, 6, 6));
+                    setShareAmount(formatAmount(amt, assetDecimals, 6));
                   }}
                    className="flex-1 py-2 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:border-amber-500/30 hover:text-amber-400 transition-all"
                 >
@@ -150,13 +153,13 @@ export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalP
             {shareAmount && parsedShares > 0n && (
                <div className="rounded-xl bg-secondary/30 border border-border p-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                   <span className="text-muted-foreground">You receive</span>
+                   <span className="text-muted-foreground">{t("redeem.youReceive")}</span>
                   <span className="text-white font-medium">
-                    ~${formatAmount(previewAssets, 6, 4)} {meta.assetSymbol}
+                    ~{formatAmount(previewAssets, assetDecimals, 4)} {meta.assetSymbol}
                   </span>
                 </div>
                  <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Redemption type</span>
+                  <span className="text-muted-foreground">{t("redeem.type")}</span>
                   <span className={instant ? "text-primary" : "text-amber-400"}>
                     {instant === undefined ? "—" : instant ? "⚡ Instant" : "⏳ Queued"}
                   </span>
@@ -201,7 +204,7 @@ export function RedeemModal({ vaultId, meta, userShares, onClose }: RedeemModalP
                className="w-full py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-amber-500 text-white hover:bg-amber-400"
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : <ArrowUpFromLine size={18} />}
-              {isLoading ? stepLabels[step] : "Withdraw"}
+              {isLoading ? stepLabels[step] : t("redeem.withdraw")}
             </button>
           </div>
         )}

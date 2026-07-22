@@ -5,8 +5,10 @@ import { TrendingUp, Calculator, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useVaults, useVaultHistory } from "@yo-protocol/react";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export function YieldCalculator() {
+  const t = useT();
   const [amount, setAmount] = useState(1000);
   const [years, setYears] = useState(1);
   
@@ -29,8 +31,8 @@ export function YieldCalculator() {
           <Calculator className="text-primary" size={20} />
         </div>
         <div>
-          <h3 className="font-bold text-lg">Yield Projection</h3>
-          <p className="text-xs text-muted-foreground">Estimated earnings over time.</p>
+          <h3 className="font-bold text-lg">{t("calculator.title")}</h3>
+          <p className="text-xs text-muted-foreground">{t("calculator.subtitle")}</p>
         </div>
       </div>
 
@@ -79,7 +81,7 @@ export function YieldCalculator() {
 
       <div className="p-5 rounded-3xl bg-primary/5 border border-primary/10 relative overflow-hidden">
         <div className="relative z-10">
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Total Earnings</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">{t("calculator.totalEarnings")}</p>
           <div className="text-3xl font-black text-primary">
             +${earnings.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </div>

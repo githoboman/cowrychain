@@ -6,8 +6,10 @@ import { VAULTS } from "@yo-protocol/core";
 import { formatUnits } from "viem";
 import { Trophy, Star, ShieldCheck, Zap, Medal, Rocket, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export default function AchievementsPage() {
+  const t = useT();
   const { address, isConnected } = useAccount();
   const yoUsdAddress = (VAULTS as any)["yoUSD"]?.address;
   const { balance } = useTokenBalance(yoUsdAddress as any, address);
@@ -77,13 +79,13 @@ export default function AchievementsPage() {
       {!isConnected ? (
         <div className="text-center p-12 bg-secondary/30 rounded-3xl border border-border">
           <Lock className="mx-auto text-muted-foreground mb-4" size={48} />
-          <h2 className="text-xl font-bold text-white mb-2">Connect to view Badges</h2>
+          <h2 className="text-xl font-bold text-white mb-2">{t("achievements.connectTitle")}</h2>
           <p className="text-muted-foreground">We need to scan your Base L2 history to verify your achievements.</p>
         </div>
       ) : (
         <>
           <div className="bg-card border border-border p-6 rounded-3xl flex justify-between items-center max-w-3xl mx-auto shadow-xl">
-            <div className="font-bold text-lg">Progress</div>
+            <div className="font-bold text-lg">{t("achievements.progress")}</div>
             <div className="text-primary font-black text-2xl">{unlockedCount} / {badges.length}</div>
           </div>
           

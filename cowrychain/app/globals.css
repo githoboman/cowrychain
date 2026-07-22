@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
+  --background: 0 0% 98%;
   --foreground: 222.2 84% 4.9%;
 
   --card: 0 0% 100%;
@@ -15,7 +15,7 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
 
-  --primary: 161 84% 43%;
+  --primary: 158 100% 45%;
   --primary-foreground: 210 40% 98%;
 
   --secondary: 210 40% 96.1%;
@@ -32,42 +32,44 @@
 
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
+  --ring: 158 100% 45%;
 
-  --radius: 0.75rem;
+  --radius: 1rem;
 
   --font-inter: 'Inter', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
+  /* Deep oceanic/space black */
+  --background: 222 47% 4%; 
   --foreground: 210 40% 98%;
 
-  --card: 222.2 84% 4.9%;
+  --card: 222 47% 5%;
   --card-foreground: 210 40% 98%;
 
-  --popover: 222.2 84% 4.9%;
+  --popover: 222 47% 5%;
   --popover-foreground: 210 40% 98%;
 
-  --primary: 161 84% 43%;
+  /* Luminous Synth Green / Cyan */
+  --primary: 158 100% 45%;
   --primary-foreground: 222.2 47.4% 11.2%;
 
-  --secondary: 217.2 32.6% 17.5%;
+  --secondary: 217 33% 10%;
   --secondary-foreground: 210 40% 98%;
 
-  --muted: 217.2 32.6% 17.5%;
+  --muted: 217 33% 10%;
   --muted-foreground: 215 20.2% 65.1%;
 
-  --accent: 217.2 32.6% 17.5%;
+  --accent: 217 33% 15%;
   --accent-foreground: 210 40% 98%;
 
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
+  --border: 217 33% 15%;
+  --input: 217 33% 15%;
+  --ring: 158 100% 45%;
 }
 
 @layer base {
@@ -95,13 +97,18 @@
   background: hsl(var(--primary)); 
 }
 
-/* Glassmorphism Classes */
+/* Premium Glassmorphism */
 .glass {
-  @apply bg-background/60 backdrop-blur-xl border border-border/50;
+  @apply bg-background/50 backdrop-blur-2xl border border-white/5 dark:border-white/10;
 }
 
 .glass-card {
-  @apply bg-card/40 backdrop-blur-md border border-border/40 shadow-xl;
+  @apply bg-card/60 backdrop-blur-xl border border-white/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)];
+}
+
+.premium-glass {
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  @apply backdrop-blur-3xl border border-white/10 shadow-2xl;
 }
 
 @keyframes shimmer {
@@ -129,8 +136,22 @@
 
 .float { animation: float 6s ease-in-out infinite; }
 
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  display: flex;
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 [data-rk] {
   --rk-colors-accentColor: hsl(var(--primary)) !important;
-  --rk-colors-accentColorForeground: #ffffff !important;
+  --rk-colors-accentColorForeground: #000000 !important;
   --rk-radii-modal: 1.5rem !important;
 }

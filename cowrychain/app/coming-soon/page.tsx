@@ -2,8 +2,10 @@
 
 import { Clock, Code2, Cpu, Rocket, Users, FileLock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export default function ComingSoonPage() {
+  const t = useT();
   const features = [
     {
       title: "Multiplayer Squad Savings",
@@ -73,7 +75,7 @@ export default function ComingSoonPage() {
       <div className="text-center mt-20 p-12 bg-card border border-border rounded-[3rem] shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px]" />
         <Rocket className="mx-auto text-primary mb-6" size={48} />
-        <h2 className="text-3xl font-black text-white mb-4">Want early access?</h2>
+        <h2 className="text-3xl font-black text-white mb-4">{t("comingSoon.earlyAccess")}</h2>
         <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
           We push new features to our Base Sepolia testnet environment daily. Connect your wallet and enable notifications to be the first to test these custom smart contracts.
         </p>

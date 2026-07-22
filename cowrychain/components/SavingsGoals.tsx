@@ -11,10 +11,12 @@ import { formatAmount } from "@/lib/utils";
 import { VAULT_META } from "@/lib/constants";
 import { useGoalStore } from "@/lib/goal-store";
 import { DepositModal } from "./modals/DepositModal";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export function SavingsGoals() {
   const { address, isConnected } = useAccount();
   const { positions } = useUserPositions(address as any);
+  const t = useT();
   
   // Calculate total user assets across all positions for use in goals
   const totalAssets = (positions as any)?.reduce((sum: bigint, pos: any) => {
@@ -57,8 +59,8 @@ export function SavingsGoals() {
             <Target className="text-primary" size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-lg">Savings Goals</h3>
-            <p className="text-xs text-muted-foreground">Track your progress.</p>
+            <h3 className="font-bold text-lg">{t("goals.title")}</h3>
+            <p className="text-xs text-muted-foreground">{t("goals.subtitle")}</p>
           </div>
         </div>
         <button 
@@ -98,7 +100,7 @@ export function SavingsGoals() {
                     <button 
                       onClick={() => removeGoal(goal.id)}
                       className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                      title="Delete Goal"
+                      title={t("goals.deleteGoal")}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -116,13 +118,13 @@ export function SavingsGoals() {
                 </div>
                 
                 <div className="flex justify-between mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tighter items-center">
-                  <span>{progress.toFixed(0)}% reached</span>
+                  <span>{t("goals.reached", { percent: progress.toFixed(0) })}</span>
                   
                   <button 
                     onClick={() => setFastDepositOpen(true)}
                     className="text-primary hover:text-emerald-400 italic underline-offset-2 hover:underline tracking-normal normal-case"
                   >
-                    + Deposit Funds
+                    {t("goals.depositFunds")}
                   </button>
                 </div>
               </motion.div>
@@ -148,24 +150,24 @@ export function SavingsGoals() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative w-full max-w-sm bg-card border border-border rounded-[2rem] p-8 shadow-2xl"
             >
-              <h2 className="text-xl font-bold mb-6">Create New Goal</h2>
+              <h2 className="text-xl font-bold mb-6">{t("goals.createNew")}</h2>
               <form onSubmit={handleAddGoal} className="space-y-4">
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Goal Name
+                    {t("goals.goalName")}
                   </label>
                   <input
                     autoFocus
                     type="text"
                     value={newGoal.name}
                     onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
-                    placeholder="e.g. New Car, Savings..."
+                    placeholder={t("goals.namePlaceholder")}
                     className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Target Amount ($)
+                    {t("goals.targetAmount")}
                   </label>
                   <input
                     type="number"
@@ -177,18 +179,18 @@ export function SavingsGoals() {
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Duration (Optional)
+                    {t("goals.durationOptional")}
                   </label>
                   <select
                     value={newGoal.duration}
                     onChange={(e) => setNewGoal({ ...newGoal, duration: e.target.value })}
                     className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 text-white"
                   >
-                    <option value="">No deadline</option>
-                    <option value="1 Month">1 Month</option>
-                    <option value="3 Months">3 Months</option>
-                    <option value="6 Months">6 Months</option>
-                    <option value="1 Year">1 Year</option>
+                    <option value="">{t("goals.noDeadline")}</option>
+                    <option value="1 Month">{t("goals.duration.1m")}</option>
+                    <option value="3 Months">{t("goals.duration.3m")}</option>
+                    <option value="6 Months">{t("goals.duration.6m")}</option>
+                    <option value="1 Year">{t("goals.duration.1y")}</option>
                   </select>
                 </div>
                 <div className="pt-4 flex gap-3">
@@ -197,13 +199,13 @@ export function SavingsGoals() {
                     onClick={() => setIsModalOpen(false)}
                     className="flex-1 px-4 py-3 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 px-4 py-3 rounded-xl bg-primary text-white text-sm font-bold hover:bg-emerald-600 transition-colors shadow-lg shadow-primary/20"
                   >
-                    Create Goal
+                    {t("goals.createGoal")}
                   </button>
                 </div>
               </form>

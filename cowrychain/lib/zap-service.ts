@@ -65,7 +65,14 @@ export interface ZapQuote {
   priceImpact: number;
   estimatedGasUSD: number;
   route: string[];
-  
+
+  /** True only when the router returned real, broadcastable calldata. */
+  isExecutable: boolean;
+  /** True when the output figures come from MOCK_PRICES rather than a routed quote. */
+  isIndicativePricing: boolean;
+  /** Human-readable reason the quote is not executable, if any. */
+  quoteError?: string;
+
   // Real transaction parameters for sending
   txTo?: `0x${string}`;
   txData?: `0x${string}`;
@@ -78,7 +85,8 @@ export interface ZapQuote {
 export async function fetchZapQuote(
   inputToken: TokenOption,
   outputAssetSymbol: string, // "USDC" or "WETH"
-  amountIn: string
+  amountIn: string,
+  taker?: `0x${string}` // connected wallet; required to get executable calldata
 ): Promise<ZapQuote | null> {
   if (!amountIn || Number(amountIn) <= 0) return null;
 
@@ -105,45 +113,65 @@ export async function fetchZapQuote(
   const outputParsed = parseUnits(amountOutNum.toFixed(outDecimals), outDecimals);
   const inputParsed = parseUnits(amountIn, inputToken.decimals);
   
-  // Attempt to fetch real calldata from 0x Base API
-  let txTo = undefined;
-  let txData = undefined;
-  let txValue = undefined;
-  
-  try {
-    const outputTokenAddress = outputAssetSymbol === "USDC" 
-      ? "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" 
-      : "0x4200000000000000000000000000000000000006";
-      
-    // Structurally correct fetch (may 403 without API key, gracefully fallback if so)
-    const qs = new URLSearchParams({
-      sellToken: inputToken.address,
-      buyToken: outputTokenAddress,
-      sellAmount: inputParsed.toString(),
-    }).toString();
-    
-    // Using base.api.0x.org as the routing endpoint
-    const res = await fetch(`https://base.api.0x.org/swap/v1/quote?${qs}`);
-    if (res.ok) {
-      const data = await res.json();
-      txTo = data.to;
-      txData = data.data;
-      txValue = BigInt(data.value || 0);
+  // Fetch real, executable calldata from our server-side 0x relay (/api/zap-quote),
+  // which holds the secret API key. The figures above are indicative (MOCK_PRICES);
+  // a zap may only be broadcast when the relay returns real calldata, so txTo/txData
+  // stay undefined on every failure path. Never synthesise calldata: empty calldata
+  // to a real router is a no-op that would be followed by a deposit of tokens the
+  // user never received.
+  let txTo: `0x${string}` | undefined = undefined;
+  let txData: `0x${string}` | undefined = undefined;
+  let txValue: bigint | undefined = undefined;
+  let quoteError: string | undefined = undefined;
+  // When 0x returns a real routed output, prefer it over the mock estimate.
+  let routedOutput: bigint | undefined = undefined;
+
+  if (!taker) {
+    // No wallet connected yet — show the indicative preview but do not offer to send.
+    quoteError = "Connect your wallet to get an executable swap quote.";
+  } else {
+    try {
+      const outputTokenAddress = outputAssetSymbol === "USDC"
+        ? "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        : "0x4200000000000000000000000000000000000006";
+
+      const qs = new URLSearchParams({
+        sellToken: inputToken.address,
+        buyToken: outputTokenAddress,
+        sellAmount: inputParsed.toString(),
+        taker,
+      }).toString();
+
+      const res = await fetch(`/api/zap-quote?${qs}`, { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.to && data?.data && data.data !== "0x") {
+        txTo = data.to;
+        txData = data.data;
+        txValue = BigInt(data.value || 0);
+        // Use the router's guaranteed-minimum output if present.
+        if (data.minBuyAmount) routedOutput = BigInt(data.minBuyAmount);
+      } else {
+        quoteError = data?.message || `Swap routing failed (HTTP ${res.status}).`;
+      }
+    } catch {
+      quoteError = "Could not reach the swap router.";
     }
-  } catch (error) {
-    console.log("0x API fallback triggered (missing key/rate limit). Simulated calldata generated.");
-    txTo = "0xdef1c0ded9bec7f1a1670819833240f027b25eff"; // 0x Exchange Proxy
-    txData = "0x"; 
-    txValue = BigInt(0);
   }
+
+  const expectedOutputAmount = routedOutput ?? outputParsed;
 
   return {
     inputAmount: inputParsed,
-    expectedOutputAmount: outputParsed,
+    expectedOutputAmount,
     slippagePercent: slippage,
     priceImpact: slippage * 0.8,
     estimatedGasUSD: 0.45,
     route: [inputToken.symbol, outputAssetSymbol],
+    isExecutable: Boolean(txTo && txData),
+    // Pricing is only indicative when we could NOT get a routed output.
+    isIndicativePricing: routedOutput === undefined,
+    quoteError,
     txTo,
     txData,
     txValue

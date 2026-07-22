@@ -19,6 +19,29 @@ export const DEFAULT_CHAIN = isTestnet ? baseSepolia : base;
 export const YO_PARTNER_ID = 9999;
 export const YO_CHAIN_ID = DEFAULT_CHAIN.id;
 
+// ── Gas sponsorship (EIP-5792 paymaster) ──────────────────────────────────────
+/**
+ * Coinbase CDP paymaster endpoint that sponsors user gas. Transactions are billed
+ * to whoever owns this key, so it must be a funded, real endpoint.
+ *
+ * Resolves to undefined unless a genuine URL is configured. The previous version
+ * fell back to a literal ".../YOUR_API_KEY" placeholder, which the wallet rejected
+ * and silently billed the user instead — the app claimed gasless while charging gas.
+ * Treating an unconfigured/placeholder value as "no sponsorship" keeps that failure
+ * visible rather than silent.
+ */
+const rawPaymasterUrl = process.env.NEXT_PUBLIC_PAYMASTER_URL?.trim();
+
+export const PAYMASTER_URL =
+  rawPaymasterUrl &&
+  rawPaymasterUrl.startsWith("https://") &&
+  !rawPaymasterUrl.includes("YOUR_API_KEY")
+    ? rawPaymasterUrl
+    : undefined;
+
+/** True when gas sponsorship is actually available this session. */
+export const IS_GASLESS_ENABLED = PAYMASTER_URL !== undefined;
+
 export const USDC_DECIMALS = 6;
 export const SHARE_DECIMALS = 6;
 

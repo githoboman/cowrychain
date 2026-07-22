@@ -7,10 +7,12 @@ import { VaultCard } from "@/components/VaultCard";
 import { YieldChart } from "@/components/YieldChart";
 import { VAULT_META } from "@/lib/constants";
 import { Calculator } from "lucide-react";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 const VAULT_ENTRIES = Object.entries(VAULT_META);
 
 export default function SavePage() {
+  const t = useT();
   const [calcAmount, setCalcAmount] = useState("1000");
   const [calcVaultIdx, setCalcVaultIdx] = useState(0);
 
@@ -30,7 +32,7 @@ export default function SavePage() {
       <main className="pt-20 min-h-screen max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <div className="mb-8 mt-8">
           <h1 className="text-3xl font-black text-white mb-2">Save</h1>
-          <p className="text-[#6b9e7e]">Set goals, choose vaults, and watch your money grow</p>
+          <p className="text-[#6b9e7e]">{t("save.subtitle")}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -42,7 +44,7 @@ export default function SavePage() {
             <div className="rounded-2xl border border-[#1a4a2e] bg-[#0f2d1e] p-6">
               <div className="flex items-center gap-2 mb-5">
                 <Calculator size={18} className="text-[#22c55e]" />
-                <h2 className="text-lg font-bold text-white">Yield Calculator</h2>
+                <h2 className="text-lg font-bold text-white">{t("save.yieldCalculator")}</h2>
               </div>
 
               <div className="space-y-4 mb-5">

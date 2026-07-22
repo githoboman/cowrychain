@@ -1,18 +1,34 @@
 # 🐚 CowryChain
 
-**The smartest onchain savings account — built on Base, powered by YO Protocol.**
+**The smartest onchain savings account — built on Base + Initia, powered by YO Protocol.**
 
-CowryChain lets anyone save in USDC or ETH and earn optimized DeFi yield automatically. No bank. No middleman. No permission required. Withdraw anytime.
+CowryChain lets anyone save in USDC or ETH and earn optimized DeFi yield automatically. No bank. No middleman. No permission required. Withdraw anytime. Now powered by the **Initia Interwoven Stack** for cross-chain bridging, social logins, and `.init` usernames.
 
 [![Built on Base](https://img.shields.io/badge/Built%20on-Base-0052FF?style=flat&logo=coinbase)](https://base.org)
+[![Powered by Initia](https://img.shields.io/badge/Powered%20by-Initia-7C3AED?style=flat)](https://initia.xyz)
+[![InterwovenKit](https://img.shields.io/badge/InterwovenKit-React-a855f7?style=flat)](https://docs.initia.xyz/interwovenkit)
 [![Powered by YO Protocol](https://img.shields.io/badge/Powered%20by-YO%20Protocol-22c55e?style=flat)](https://yo.xyz)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat&logo=nextdotjs)](https://nextjs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
+## 💡 Why CowryChain?
+
+CowryChain is designed to solve several major friction points in Decentralized Finance (DeFi) today:
+
+1. **The Friction of Gas Fees:** New users are deterred because they must acquire and hold native tokens (ETH) just to make a deposit. CowryChain solves this via **EIP-5792 Paymasters**, allowing 100% gasless transactions sponsored by the protocol.
+2. **Complexity of Yield Farming:** Earning high yield requires manually bridging assets, finding liquidity pools, and compounding rewards. CowryChain uses the **YO Protocol SDK** to auto-route funds to the best strategies and auto-compounds yield effortlessly every block.
+3. **Asset Fragmentation:** Users often hold volatile tokens (cbBTC, DEGEN) and can't save them directly. CowryChain solves this with **0x API Cross-Chain Zapping**, instantly swapping any asset into a yield-bearing stablecoin position in one click.
+4. **Poor User Engagement:** Traditional savings accounts are boring lifeless dashboards. CowryChain introduces **Live Gamification**, automatically unlocking visual cryptographic badges as users grow their active collateral balance on-chain.
+
+---
+
 ## ✨ Premium DeFi Features
 
+- 🔮 **Initia Interwoven Stack** — Full integration with Initia's next-gen appchain tooling including native social logins and session keys.
+- 🌉 **Interwoven Bridge** — Instantly bridge INIT, USDC, and ETH between your Initia appchain and Base natively.
+- 👤 **Initia Usernames (.init)** — Human-readable on-chain identity resolution powered by the Initia username registry.
 - ⛽ **100% Gasless (EIP-5792)** — Approvals and deposits are fully sponsored via Coinbase Smart Wallet Paymasters.
 - ⚡ **Auto-Zapping (0x API)** — Instantly swap any token (cbBTC, DEGEN, AERO) directly into Vault shares in one click.
 - 🏅 **Gamified Achievements** — Unlock dynamic UI badges directly verified by your active on-chain Collateral balances.
@@ -28,20 +44,51 @@ CowryChain lets anyone save in USDC or ETH and earn optimized DeFi yield automat
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Framework** | [Next.js 15](https://nextjs.org) (App Router) |
-| **Language** | TypeScript |
-| **Styling** | Tailwind CSS + custom CSS variables |
-| **Animations** | Framer Motion |
-| **Web3 / Wallet** | [Wagmi v2](https://wagmi.sh) + [RainbowKit](https://www.rainbowkit.com) |
-| **Yield Protocol** | [@yo-protocol/react](https://yo.xyz) SDK |
-| **Chain Abstraction** | [viem](https://viem.sh) |
-| **Data Fetching** | [@tanstack/react-query](https://tanstack.com/query) |
-| **Icons** | [Lucide React](https://lucide.dev) |
-| **Network** | Base Mainnet / Base Sepolia (testnet) |
+| Layer                      | Technology                                                              |
+| -------------------------- | ----------------------------------------------------------------------- |
+| **Framework**              | [Next.js 15](https://nextjs.org) (App Router)                           |
+| **Language**               | TypeScript                                                              |
+| **Styling**                | Tailwind CSS + custom CSS variables                                     |
+| **Animations**             | Framer Motion                                                           |
+| **Web3 / Wallet (EVM)**    | [Wagmi v2](https://wagmi.sh) + [RainbowKit](https://www.rainbowkit.com) |
+| **Web3 / Wallet (Initia)** | [@initia/interwovenkit-react](https://docs.initia.xyz/interwovenkit)    |
+| **Yield Protocol**         | [@yo-protocol/react](https://yo.xyz) SDK                                |
+| **Chain Abstraction**      | [viem](https://viem.sh)                                                 |
+| **Data Fetching**          | [@tanstack/react-query](https://tanstack.com/query)                     |
+| **Icons**                  | [Lucide React](https://lucide.dev)                                      |
+| **Network (EVM)**          | Base Mainnet / Base Sepolia                                             |
+| **Network (Initia)**       | `initiation-2` testnet / Initia Mainnet                                 |
 
 ---
+
+## 🔮 Initia Integration: Cross-Chain Savings, Zero Friction
+
+CowryChain is an automated DeFi savings account on Base that leverages the **Initia Interwoven Stack** for the INITIATE Hackathon (Season 1). We completely bridge the gap between Cosmos liquidity and EVM yield.
+
+We integrated Initia to solve the three biggest pain points in DeFi savings:
+
+1. **Liquidity Fragmentation:** By integrating the native **Interwoven Bridge** (`InitiaBridge` component), Cosmos users can seamlessly deposit or manual-send `INIT`, `USDC`, and `ETH` straight into Base yield vaults without ever leaving our app via `requestTxBlock` with `MsgSend`.
+2. **Clunky Onboarding:** We use **InterwovenKit** (`InitiaWalletButton`) to offer social logins and native wallet connections. It instantly resolves on-chain **`.init` usernames** (`InitiaUsername`) to give users a recognizable human identity.
+3. **Transaction Fatigue:** Thanks to Initia's **Auto-Sign (Session Keys)**, users can approve, deposit, and compound their savings with a single click—no more endless wallet pop-ups.
+
+*CowryChain delivers Base's optimized yield with Initia's unmatched cross-chain user experience.*
+
+### Chain Deployment
+
+- **Chain ID:** `initiation-2` (testnet) — set via `NEXT_PUBLIC_INITIA_CHAIN_ID`
+- **Submission file:** `.initia/submission.json`
+
+### Provider Setup
+
+`InterwovenKitProvider` wraps the entire app in `app/providers.tsx`:
+
+```tsx
+<InterwovenKitProvider defaultChainId={INITIA_CHAIN_ID}>
+  {children}
+</InterwovenKitProvider>
+```
+
+Styles are injected via `injectStyles(interwovenKitStyles)` in a `useEffect` as required.
 
 ## 🚀 Getting Started
 
@@ -101,15 +148,15 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🌐 Pages & Navigation
 
-| Route | Description |
-|---|---|
-| `/` | Home — Landing page (unauthenticated) or Dashboard (connected) |
-| `/vaults` | Browse and filter all available YO Protocol vaults |
-| `/save` | Set savings goals and execute Token Zapping |
+| Route           | Description                                                      |
+| --------------- | ---------------------------------------------------------------- |
+| `/`             | Home — Landing page (unauthenticated) or Dashboard (connected)   |
+| `/vaults`       | Browse and filter all available YO Protocol vaults               |
+| `/save`         | Set savings goals and execute Token Zapping                      |
 | `/achievements` | View unlocked Gamification badges based on your verified Balance |
-| `/coming-soon` | Detailed Roadmap exposing futuristic Protocol features |
-| `/portfolio` | Full portfolio overview with positions and history |
-| `/settings` | User settings |
+| `/coming-soon`  | Detailed Roadmap exposing futuristic Protocol features           |
+| `/portfolio`    | Full portfolio overview with positions and history               |
+| `/settings`     | User settings                                                    |
 
 ---
 
@@ -159,6 +206,7 @@ cowrychain/
 CowryChain uses **YO Protocol vaults** — ERC-4626 compatible smart contracts deployed on Base that automatically route deposited assets to the highest-yielding DeFi strategies.
 
 ### Deposit Flow
+
 1. User enters an amount and clicks **Save Now**
 2. App requests **ERC-20 approval** for the vault to spend your tokens
 3. Once approved, the deposit transaction is submitted
@@ -166,6 +214,7 @@ CowryChain uses **YO Protocol vaults** — ERC-4626 compatible smart contracts d
 5. Yield accrues every block; your share value increases over time
 
 ### Withdraw Flow
+
 1. User enters share amount and clicks **Withdraw**
 2. Redeem transaction is submitted
 3. Depending on vault liquidity:
@@ -174,13 +223,14 @@ CowryChain uses **YO Protocol vaults** — ERC-4626 compatible smart contracts d
 
 ### Vault Addresses
 
-| Vault | Network | Asset | Type |
-|---|---|---|---|
-| `yoUSD` | Base Mainnet / Sepolia | USDC | Stablecoin, Conservative |
-| `yoETH` | Base Mainnet / Sepolia | WETH | ETH, Moderate |
+| Vault   | Network                | Asset | Type                     |
+| ------- | ---------------------- | ----- | ------------------------ |
+| `yoUSD` | Base Mainnet / Sepolia | USDC  | Stablecoin, Conservative |
+| `yoETH` | Base Mainnet / Sepolia | WETH  | ETH, Moderate            |
 
 > [!IMPORTANT]
 > Token addresses are automatically selected based on `NEXT_PUBLIC_IS_TESTNET`:
+>
 > - USDC Mainnet: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
 > - USDC Sepolia: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 > - WETH (both): `0x4200000000000000000000000000000000000006`

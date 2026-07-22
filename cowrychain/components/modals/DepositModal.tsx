@@ -2,16 +2,19 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useAccount, useSendTransaction, useWaitForTransactionReceipt, useReadContract, useWriteContract } from "wagmi";
+import { waitForTransactionReceipt } from "wagmi/actions";
 import { parseAbi, erc20Abi } from "viem";
+import { wagmiConfig } from "@/lib/wagmi";
 import { VAULTS } from "@yo-protocol/core";
 import {
   useTokenBalance,
   usePreviewDeposit,
 } from "@yo-protocol/react";
 import { parseAmount, formatAmount } from "@/lib/utils";
-import { USDC_ADDRESS_BASE, WETH_ADDRESS_BASE, YO_CHAIN_ID } from "@/lib/constants";
+import { USDC_ADDRESS_BASE, WETH_ADDRESS_BASE, YO_CHAIN_ID, PAYMASTER_URL } from "@/lib/constants";
 import { X, ArrowDownToLine, Loader2, CheckCircle2, AlertCircle, Info, ChevronDown } from "lucide-react";
 import { fetchZapQuote, ZAP_SUPPORTED_TOKENS, ZapQuote, TokenOption } from "@/lib/zap-service";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 interface DepositModalProps {
   vaultId: string;
@@ -35,9 +38,10 @@ const VAULT_ASSET_CONFIG: Record<string, { address: `0x${string}`; decimals: num
 export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
   const [amount, setAmount] = useState("");
   const { address } = useAccount();
+  const t = useT();
 
   // Zapping State
-  const defaultToken = ZAP_SUPPORTED_TOKENS.find(t => t.symbol === meta.assetSymbol) || ZAP_SUPPORTED_TOKENS[0];
+  const defaultToken = ZAP_SUPPORTED_TOKENS.find(tok => tok.symbol === meta.assetSymbol) || ZAP_SUPPORTED_TOKENS[0];
   const [selectedToken, setSelectedToken] = useState<TokenOption>(defaultToken);
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
   const [zapQuote, setZapQuote] = useState<ZapQuote | null>(null);
@@ -82,18 +86,20 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
   const { sendTransactionAsync } = useSendTransaction();
   const { isSuccess: isZapConfirmed } = useWaitForTransactionReceipt({ hash: zapTxHash });
 
-  const paymasterCapabilities = {
-    paymasterService: {
-      url: process.env.NEXT_PUBLIC_PAYMASTER_URL || "https://api.developer.coinbase.com/rpc/v1/base/YOUR_API_KEY",
-    }
-  };
+  // Gas sponsorship (EIP-5792). Only sent when a real paymaster URL is configured:
+  // a placeholder URL makes the wallet reject sponsorship and silently bill the user,
+  // which would contradict the gasless promise on the landing page. When this is
+  // undefined the transaction still succeeds — the user just pays their own gas.
+  const capabilities = PAYMASTER_URL
+    ? { paymasterService: { url: PAYMASTER_URL } }
+    : undefined;
 
   // Fetch Zap Quote when amount/asset changes
   useEffect(() => {
     if (isZapping && amount && parsedAmount > 0n) {
       setIsFetchingQuote(true);
       const timer = setTimeout(async () => {
-        const quote = await fetchZapQuote(selectedToken, meta.assetSymbol, amount);
+        const quote = await fetchZapQuote(selectedToken, meta.assetSymbol, amount, address);
         setZapQuote(quote);
         setIsFetchingQuote(false);
       }, 600);
@@ -102,7 +108,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
       setZapQuote(null);
       setIsFetchingQuote(false);
     }
-  }, [amount, selectedToken, isZapping, parsedAmount, meta.assetSymbol]);
+  }, [amount, selectedToken, isZapping, parsedAmount, meta.assetSymbol, address]);
 
 
   const handleDeposit = useCallback(async () => {
@@ -110,20 +116,31 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
     setDepositError(null);
 
     try {
-      if (isZapping && zapQuote?.txData && zapQuote?.txTo) {
+      if (isZapping) {
+        // Never fall through to a plain deposit when a zap was requested: the user
+        // selected a token the vault does not accept, so depositing `parsedAmount`
+        // of the vault asset is not what they asked for.
+        if (!zapQuote?.isExecutable || !zapQuote.txTo || !zapQuote.txData) {
+          throw new Error(
+            zapQuote?.quoteError ??
+              "Swap routing is unavailable, so this zap cannot be executed. Deposit the vault asset directly instead."
+          );
+        }
+
         setSimulatedZapStep("zapping");
-        
+
         const hash = await sendTransactionAsync({
           to: zapQuote.txTo,
           data: zapQuote.txData,
           value: zapQuote.txValue || 0n,
-          capabilities: paymasterCapabilities
+          capabilities,
         } as any);
-        
+
         setZapTxHash(hash);
-        await new Promise(res => setTimeout(res, 2500)); 
+        // Wait for the swap to actually confirm before depositing its proceeds.
+        await waitForTransactionReceipt(wagmiConfig, { hash });
         setSimulatedZapStep("done");
-        
+
         // Ensure approval for the target deposit of the swapped amount
         if ((allowance ?? 0n) < zapQuote.expectedOutputAmount) {
           setProtocolStep("approving");
@@ -132,7 +149,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
             abi: erc20Abi,
             functionName: "approve",
             args: [targetVaultAddress, zapQuote.expectedOutputAmount],
-            capabilities: paymasterCapabilities
+            capabilities,
           } as any);
           await new Promise(res => setTimeout(res, 2000));
         }
@@ -143,7 +160,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
           abi: parseAbi(["function deposit(uint256 assets, address receiver) returns (uint256)"]),
           functionName: "deposit",
           args: [zapQuote.expectedOutputAmount, address],
-          capabilities: paymasterCapabilities
+          capabilities,
         } as any);
         
         setDepositTxHash(depHash);
@@ -157,7 +174,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
             abi: erc20Abi,
             functionName: "approve",
             args: [targetVaultAddress, parsedAmount],
-            capabilities: paymasterCapabilities
+            capabilities,
           } as any);
           await new Promise(res => setTimeout(res, 2000));
         }
@@ -168,7 +185,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
           abi: parseAbi(["function deposit(uint256 assets, address receiver) returns (uint256)"]),
           functionName: "deposit",
           args: [parsedAmount, address],
-          capabilities: paymasterCapabilities
+          capabilities,
         } as any);
         
         setDepositTxHash(depHash);
@@ -180,7 +197,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
       setSimulatedZapStep("idle");
       setProtocolStep("error");
     }
-  }, [sendTransactionAsync, writeContractAsync, parsedAmount, assetAddress, isZapping, zapQuote, targetVaultAddress, address, allowance]);
+  }, [sendTransactionAsync, writeContractAsync, parsedAmount, assetAddress, isZapping, zapQuote, targetVaultAddress, address, allowance, capabilities]);
 
   const handleClose = () => {
     if (protocolStep === "success") {
@@ -197,20 +214,24 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
     simulatedZapStep === "zapping";
 
   const stepLabels: Record<string, string> = {
-    idle: "Ready",
-    zapping: `Swapping ${selectedToken.symbol} to ${meta.assetSymbol}...`,
-    approving: `Approving ${meta.assetSymbol}...`,
-    depositing: "Saving to vault...",
-    success: "Saved successfully!",
-    error: "Transaction failed",
+    idle: t("deposit.step.ready"),
+    zapping: t("deposit.step.swapping", { from: selectedToken.symbol, to: meta.assetSymbol }),
+    approving: t("deposit.step.approving", { asset: meta.assetSymbol }),
+    depositing: t("deposit.step.depositing"),
+    success: t("deposit.step.success"),
+    error: t("deposit.step.error"),
   };
+
+  // A zap is only offered when the router actually returned broadcastable calldata.
+  const isZapUnavailable = isZapping && !isFetchingQuote && !!zapQuote && !zapQuote.isExecutable;
 
   const isDisabled =
     !amount ||
     parsedAmount <= 0n ||
     isLoading ||
     !address ||
-    (isZapping && isFetchingQuote);
+    (isZapping && isFetchingQuote) ||
+    isZapUnavailable;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
@@ -229,8 +250,8 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
               {meta.icon}
             </div>
             <div>
-              <h2 className="font-bold text-white text-lg">Save to {meta.name}</h2>
-              <p className="text-xs text-muted-foreground">Powered by YO Protocol on Base</p>
+              <h2 className="font-bold text-white text-lg">{t("deposit.saveTo", { vault: meta.name })}</h2>
+              <p className="text-xs text-muted-foreground">{t("deposit.poweredBy")}</p>
             </div>
           </div>
           <button onClick={handleClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-all">
@@ -244,24 +265,24 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
             <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 size={32} className="text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Saved! 🎉</h3>
+            <h3 className="text-xl font-bold text-white mb-2">{t("deposit.success.title")}</h3>
             <p className="text-[#6b9e7e] text-sm mb-4">
-              Your funds are now earning yield in the {meta.name} vault.
+              {t("deposit.success.body", { vault: meta.name })}
             </p>
             {depositTxHash && (
               <a href={`${process.env.NEXT_PUBLIC_EXPLORER_URL}/tx/${depositTxHash}`} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline">
-                View on BaseScan →
+                {t("deposit.viewOnBaseScan")}
               </a>
             )}
             <button onClick={handleClose} className="mt-6 w-full py-3 rounded-xl font-semibold text-sm bg-primary text-white">
-              Done
+              {t("deposit.done")}
             </button>
           </div>
         ) : (
           <div className="p-6 pt-2 space-y-5">
             {/* Balance */}
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Available balance</span>
+              <span className="text-muted-foreground">{t("deposit.availableBalance")}</span>
               <button
                 className="font-medium hover:text-white transition-colors"
                 style={{ color: meta.color }}
@@ -342,7 +363,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
                   <>
                     <div className="flex justify-between items-center text-sm border-b border-border/50 pb-2 mb-2">
                       <span className="text-muted-foreground flex items-center gap-1">
-                        Zap Route {isFetchingQuote && <Loader2 size={12} className="animate-spin" />}
+                        {t("deposit.zapRoute")} {isFetchingQuote && <Loader2 size={12} className="animate-spin" />}
                       </span>
                       <span className="text-white font-medium flex items-center gap-2">
                          {selectedToken.symbol} ➔ {meta.assetSymbol}
@@ -350,24 +371,39 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
                     </div>
                     {zapQuote && (
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-muted-foreground">Zap Rate</span>
+                        <span className="text-muted-foreground">{t("deposit.zapRate")}</span>
                         <span className="text-white font-medium text-xs bg-black/20 px-2 py-0.5 rounded">
-                           Slippage: {zapQuote.slippagePercent}%
+                           {t("deposit.slippage", { percent: zapQuote.slippagePercent })}
                         </span>
+                      </div>
+                    )}
+                    {zapQuote?.isIndicativePricing && zapQuote.isExecutable && (
+                      <p className="text-[11px] text-muted-foreground flex items-start gap-1.5 mb-2">
+                        <Info size={12} className="mt-0.5 shrink-0" />
+                        {t("deposit.indicativePricing")}
+                      </p>
+                    )}
+                    {isZapUnavailable && (
+                      <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2.5 mb-2">
+                        <AlertCircle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                        <p className="text-[11px] text-amber-200 leading-relaxed">
+                          {zapQuote?.quoteError}{" "}
+                          {t("deposit.zapUnavailable", { asset: meta.assetSymbol })}
+                        </p>
                       </div>
                     )}
                   </>
                 )}
                 
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#6b9e7e]">You receive (shares)</span>
+                  <span className="text-[#6b9e7e]">{t("deposit.youReceive")}</span>
                   <span className="text-white font-medium">
-                    {previewShares ? formatAmount(previewShares, 6, 6) : "—"} y{meta.assetSymbol}
+                    {previewShares ? formatAmount(previewShares, assetDecimals, 6) : "—"} y{meta.assetSymbol}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Network</span>
-                  <span className="text-foreground">Base • Est. ~$0.01 fee</span>
+                  <span className="text-muted-foreground">{t("deposit.network")}</span>
+                  <span className="text-foreground">{t("deposit.networkFee")}</span>
                 </div>
               </div>
             )}
@@ -376,7 +412,7 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
             {depositError && (
               <div className="flex items-start gap-2 p-3 rounded-xl bg-red-900/20 border border-red-500/20 text-red-400 text-sm">
                 <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                <span>{depositError.message?.slice(0, 100) ?? "Transaction failed"}</span>
+                <span>{depositError.message?.slice(0, 140) ?? t("deposit.step.error")}</span>
               </div>
             )}
 
@@ -384,9 +420,9 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
             {isLoading && (
               <div className="flex items-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm">
                 <Loader2 size={16} className="animate-spin" />
-                <span>{stepLabels[currentStep] ?? "Processing..."}</span>
+                <span>{stepLabels[currentStep] ?? t("deposit.processing")}</span>
                 {protocolStep === "approving" && currentStep === "depositing" && (
-                  <span className="text-xs text-[#6b9e7e] ml-auto">Approved ✓</span>
+                  <span className="text-xs text-[#6b9e7e] ml-auto">{t("deposit.approved")}</span>
                 )}
               </div>
             )}
@@ -395,7 +431,9 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
             <div className="flex items-start gap-2 text-xs text-muted-foreground">
               <Info size={13} className="mt-0.5 shrink-0" />
               <span>
-                {isZapping ? `Your ${selectedToken.symbol} will be automatically zapped into ${meta.assetSymbol} and deposited into the YO Protocol vault.` : `Funds are deposited into the YO Protocol vault on Base. Yield accrues every block.`}
+                {isZapping
+                  ? t("deposit.info.zap", { token: selectedToken.symbol, asset: meta.assetSymbol })
+                  : t("deposit.info.standard")}
               </span>
             </div>
 
@@ -415,7 +453,11 @@ export function DepositModal({ vaultId, meta, onClose }: DepositModalProps) {
               ) : (
                 <ArrowDownToLine size={18} />
               )}
-              {isLoading ? stepLabels[currentStep] : isZapping ? `Zap & Save ${selectedToken.symbol}` : `Save $${amount || "0"}`}
+              {isLoading
+                ? stepLabels[currentStep]
+                : isZapping
+                  ? t("deposit.cta.zap", { token: selectedToken.symbol })
+                  : t("deposit.cta.save", { amount: amount || "0" })}
             </button>
           </div>
         )}

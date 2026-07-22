@@ -4,8 +4,10 @@ import { Navbar } from "@/components/Navbar";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { LogOut, ExternalLink, Shield } from "lucide-react";
+import { useT } from "@/lib/i18n/LanguageProvider";
 
 export default function SettingsPage() {
+  const t = useT();
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
 
@@ -14,7 +16,7 @@ export default function SettingsPage() {
       <Navbar />
       <main className="pt-20 min-h-screen max-w-2xl mx-auto px-4 sm:px-6 pb-16">
         <div className="mb-8 mt-8">
-          <h1 className="text-3xl font-black text-white mb-2">Settings</h1>
+          <h1 className="text-3xl font-black text-white mb-2">{t("settings.title")}</h1>
           <p className="text-[#6b9e7e]">Manage your account and preferences</p>
         </div>
 
