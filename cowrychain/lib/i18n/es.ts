@@ -24,6 +24,9 @@ export const es: Record<keyof typeof en, string> = {
   "nav.back": "Volver",
   "nav.disconnectWallet": "Desconectar wallet",
   "nav.language": "Idioma",
+  "nav.language.hintTitle": "Cambiar idioma",
+  "nav.language.hintBody": "¿Preferís inglés? Tocá acá para cambiar cuando quieras.",
+  "nav.language.hintDismiss": "Entendido",
 
   // ── Landing: hero ───────────────────────────────────────────────────────────
   "landing.badge": "Ahorro de nueva generación en Base",

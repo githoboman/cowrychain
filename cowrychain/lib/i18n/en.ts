@@ -19,6 +19,9 @@ export const en = {
   "nav.back": "Back",
   "nav.disconnectWallet": "Disconnect Wallet",
   "nav.language": "Language",
+  "nav.language.hintTitle": "Change language",
+  "nav.language.hintBody": "Prefer English? Tap here to switch anytime.",
+  "nav.language.hintDismiss": "Got it",
 
   // ── Landing: hero ───────────────────────────────────────────────────────────
   "landing.badge": "Next-Gen Savings on Base",
