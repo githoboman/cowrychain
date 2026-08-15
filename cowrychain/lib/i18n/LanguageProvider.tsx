@@ -33,21 +33,13 @@ function interpolate(template: string, vars?: Record<string, string | number>) {
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Always start at "en" so the server and first client render agree; the stored
   // preference is applied in an effect to avoid a hydration mismatch.
-  // TEMPORARY: Spanish is forced as the default for everyone on first load, for the
-  // Uruguay (ETH Uruguay) audience. To restore normal behaviour later:
-  //   1. change this initial value back to "en"
-  //   2. re-enable the stored-preference restore in the effect below.
-  const [locale, setLocaleState] = useState<Locale>("es");
+  const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
-    // TEMPORARY: intentionally NOT restoring the saved preference so that even
-    // visitors who previously chose "en" see Spanish first for now. The manual
-    // toggle still works for the current session. Re-enable this block to honour
-    // the visitor's saved choice again:
-    // const stored = window.localStorage.getItem(STORAGE_KEY);
-    // if (stored === "en" || stored === "es") {
-    //   setLocaleState(stored);
-    // }
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "en" || stored === "es") {
+      setLocaleState(stored);
+    }
   }, []);
 
   useEffect(() => {
