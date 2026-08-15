@@ -93,7 +93,7 @@ export function LandingPage() {
             <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight leading-[1.1] mb-8">
               {t("landing.headline.line1")} <br />
               {t("landing.headline.line2")}{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-400">
+              <span className="text-gradient">
                 {t("landing.headline.highlight")}
               </span>
             </h1>
